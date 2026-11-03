@@ -1,0 +1,59 @@
+# Bis Version 0.x hieß das Projekt BI-StorchCam; Variablen mit BI_STORCHCAM_ in einer alten .env gelten weiter.
+name: storchcam
+
+services:
+  storchcam:
+    build: .
+    image: storchcam:latest
+    container_name: storchcam
+    restart: unless-stopped
+    user: "1000:1000"
+    # Videogruppen des Hosts für GPU-Zugriff (video=44, render=992).
+    group_add:
+      - "44"
+      - "992"
+    shm_size: "512m"
+    # Dockers Standard-Seccomp-Profil verhindert die Chromium-Sandbox; so bleibt sie aktiv statt --no-sandbox.
+    security_opt:
+      - seccomp=unconfined
+
+    ports:
+      # Standard nur auf dem Pi selbst (http://localhost:8080). Für „Am Handy“ in einer .env
+      # STORCHCAM_BIND=0.0.0.0 setzen; Geräte im Heimnetz brauchen dann einen Kopplungscode.
+      # Belegt schon ein anderer Dienst Port 8080 (z. B. Pi-hole), in der .env STORCHCAM_PORT=8090 setzen.
+      - "${STORCHCAM_BIND:-${BI_STORCHCAM_BIND:-127.0.0.1}}:${STORCHCAM_PORT:-${BI_STORCHCAM_PORT:-8080}}:8000"
+
+    volumes:
+      - ./data:/data
+      # Wayland-/Audio-Sockets der Desktop-Sitzung; rslave, damit die Sitzung auch nach dem Containerstart erscheint.
+      - type: bind
+        source: /run/user
+        target: /run/user
+        bind:
+          propagation: rslave
+      # Bluetooth-Lautsprecher: bluetoothctl spricht über den System-D-Bus mit BlueZ auf dem Host.
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+      # Gaming: nur der Socket des Gaming-Hilfsdienstes (scripts/gaming/install-agent.sh), kein Docker-Socket.
+      # Fehlt der Dienst, bleibt der Ordner leer und das Menü zeigt, wie man ihn einrichtet.
+      - /var/lib/storchcam-gaming/socket:/run/gaming-agent
+
+    devices:
+      - /dev/dri:/dev/dri
+
+    environment:
+      - TZ=Europe/Berlin
+      - XDG_RUNTIME_DIR=/run/user/1000
+      - WAYLAND_DISPLAY=wayland-0
+      - XDG_SESSION_TYPE=wayland
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+      # Kiosk-Browser auf dem angeschlossenen Bildschirm starten (0 = nur Server).
+      - STORCHCAM_KIOSK=${STORCHCAM_KIOSK:-${BI_STORCHCAM_KIOSK:-1}}
+      - STORCHCAM_STREAM_URL=${STORCHCAM_STREAM_URL:-${BI_STORCHCAM_STREAM_URL:-}}
+      # Optional; alternativ im Menü unter „System“ eintragen. Wert z. B. in einer .env-Datei neben dieser Datei.
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      # PIN-Schutz für das Menü nur bei Bedarf einschalten (1), dann wird STORCHCAM_ADMIN_PIN gebraucht.
+      - STORCHCAM_REQUIRE_PIN=${STORCHCAM_REQUIRE_PIN:-${BI_STORCHCAM_REQUIRE_PIN:-0}}
+      - STORCHCAM_ADMIN_PIN=${STORCHCAM_ADMIN_PIN:-${BI_STORCHCAM_ADMIN_PIN:-}}
+      # Adresse, unter der Handys den Pi erreichen (steht im QR-Code), z. B. http://raspberrypi.local:8080
+      - STORCHCAM_PUBLIC_URL=${STORCHCAM_PUBLIC_URL:-${BI_STORCHCAM_PUBLIC_URL:-}}
+      - STORCHCAM_GAMING_SOCKET=/run/gaming-agent/agent.sock

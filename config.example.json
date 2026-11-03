@@ -1,0 +1,132 @@
+{
+  "app": {
+    "name": "StorchCam",
+    "language": "de",
+    "timezone": "Europe/Berlin",
+    "cache_dir": "~/.cache/StorchCam",
+    "config_schema_version": 5
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "max_request_bytes": 262144,
+    "admin_session_minutes": 30,
+    "public_url": "",
+    "lan_access": false
+  },
+  "kiosk": {
+    "enabled": true,
+    "browser": "auto",
+    "profile_dir": "",
+    "disable_screensaver": true,
+    "use_gpu": true,
+    "browser_restart_seconds": 3,
+    "browser_restart_max_seconds": 60,
+    "browser_stable_seconds": 30,
+    "browser_max_failures": 8,
+    "log_file": "~/.cache/StorchCam/chromium.log",
+    "log_max_bytes": 2097152,
+    "log_backups": 3,
+    "extra_flags": []
+  },
+  "screen": {
+    "hardware_profile": "generic",
+    "output": "auto",
+    "rotation": "none",
+    "touch_device": "",
+    "touch_matrix": ""
+  },
+  "location": {
+    "label": "Berlin",
+    "latitude": 52.5200,
+    "longitude": 13.4050
+  },
+  "stream": {
+    "url": "",
+    "muted": true,
+    "autoplay": true,
+    "quality": "auto",
+    "max_fps": 30,
+    "audio": "off",
+    "favorites": [],
+    "auto_fallback": true
+  },
+  "admin": {
+    "pin_hash": "",
+    "require_pin": true
+  },
+  "music": {
+    "source": "off",
+    "spotify": {
+      "client_id": ""
+    },
+    "radio": {
+      "favorites": []
+    },
+    "equalizer": {
+      "preset": "flat",
+      "gains": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "ui": {
+    "theme": "dark",
+    "sky": "auto",
+    "layout_profile": "auto",
+    "distance": 2,
+    "compact_after": 120,
+    "setup_done": false,
+    "night": {
+      "enabled": false,
+      "start": "23:00",
+      "end": "06:00",
+      "screen_off": false
+    },
+    "clock": {
+      "enabled": true
+    },
+    "weather": {
+      "enabled": true
+    },
+    "transit": {
+      "enabled": false
+    },
+    "system": {
+      "enabled": false
+    }
+  },
+  "weather": {
+    "provider": "openmeteo",
+    "refresh_seconds": 300,
+    "forecast_hours": 8,
+    "rain_mm_threshold": 0.1,
+    "rain_probability_threshold": 45,
+    "warnings": "moderate"
+  },
+  "transit": {
+    "provider": "vrr",
+    "refresh_seconds": 60,
+    "default_max_rows": 2,
+    "target_len": 16,
+    "leave_mode": true,
+    "stops": []
+  },
+  "gaming": {
+    "pause_camera": false
+  },
+  "logging": {
+    "level": "INFO",
+    "max_bytes": 2097152,
+    "backups": 3
+  },
+  "youtube": {
+    "api_key": "",
+    "default_query": "Storch"
+  }
+}

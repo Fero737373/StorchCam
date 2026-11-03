@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Barlow aus dem Projekt, damit die Vorschau auch offline in der richtigen Schrift erscheint -->
+<style>
+@font-face { font-family: "Barlow"; font-weight: 400; font-display: swap; src: url("../../storchcam/web/fonts/barlow-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 500; font-display: swap; src: url("../../storchcam/web/fonts/barlow-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 600; font-display: swap; src: url("../../storchcam/web/fonts/barlow-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 700; font-display: swap; src: url("../../storchcam/web/fonts/barlow-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Semi Condensed"; font-weight: 700; font-display: swap; src: url("../../storchcam/web/fonts/barlow-semi-condensed-latin-700-normal.woff2") format("woff2"); }
+body { margin: 0; }
+[hidden] { display: none !important; }
+</style>
+<title>StorchCam Vorschau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: vollflächiger Livestream, Milchglas-Infoleiste unten (wie im Original), Menü als Vollbild-Dialog.
+   Tokens übernehmen das bestehende Farbsystem von StorchCam (style.css), ergänzt um wenige neue Rollen. */
+:root, [data-preview="dark"] {
+  color-scheme: dark;
+  --font: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-cond: "Barlow Semi Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --text: #f4f7f8;
+  --muted: #b9c6cc;
+  --faint: #a9b8bf;
+  --accent: #5ed6c4;
+  --on-accent: #06201c;
+  --hint: #f2c46b;
+  --danger: #ff8a7a;
+  --drop: #7fb6ff;
+  --live: #e5484d;
+  --line-night: #b9adff;
+  --on-line-night: #160f3d;
+  --bar-dry: rgba(94, 214, 196, 0.42);
+  --bar-wet: rgba(127, 182, 255, 0.9);
+  --bar-track: rgba(255, 255, 255, 0.07);
+  --glass: rgba(9, 16, 21, 0.72);
+  --glass-line: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+  --sep: rgba(255, 255, 255, 0.11);
+  --chip-bg: rgba(9, 16, 21, 0.62);
+  --chip-line: rgba(255, 255, 255, 0.14);
+  --chip-text: #dce4e7;
+  --card-bg: rgba(12, 22, 28, 0.88);
+  --bg: #071017;
+  --panel: #0c1821;
+  --line: rgba(255, 255, 255, 0.16);
+  --field: rgba(255, 255, 255, 0.055);
+  --warn-bg: #f2c46b;
+  --warn-text: #2a1d00;
+  --on-hint: #2a1d00;
+  --on-danger: #2a0702;
+  --on-wet: #06142a;
+  --bar-bg: var(--glass);
+  --mk-bg: #f2c46b;
+  --mk-text: #1d1400;
+  --touch: 48px;
+}
+
+/* Hell: Werte aus dem Original, Regen-Balken ergänzt */
+body[data-theme="light"], [data-preview="light"] {
+  color-scheme: light;
+  --text: #10232c; --muted: #4f646d; --faint: #4f646d; --chip-text: #10232c;
+  --accent: #0b7366; --on-accent: #ffffff; --hint: #865500; --danger: #a62f21; --drop: #2f6fb8; --on-hint: #ffffff; --on-danger: #ffffff; --on-wet: #ffffff;
+  --line-night: #4b3db0; --on-line-night: #ffffff;
+  --bar-dry: rgba(11, 115, 102, 0.42); --bar-wet: rgba(47, 111, 184, 0.88); --bar-track: rgba(13, 35, 45, 0.08);
+  --glass: rgba(246, 249, 250, 0.9); --glass-line: rgba(13, 35, 45, 0.16); --glass-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
+  --sep: rgba(13, 35, 45, 0.14); --chip-bg: rgba(246, 249, 250, 0.9); --chip-line: rgba(13, 35, 45, 0.16);
+  --card-bg: rgba(246, 249, 250, 0.94); --bg: #dce5e8; --panel: #f7fafb; --line: rgba(13, 35, 45, 0.2); --field: rgba(13, 35, 45, 0.05);
+  --bar-bg: var(--glass);
+}
+body[data-theme="high-contrast"], [data-preview="high-contrast"] {
+  --text: #ffffff; --muted: #ffffff; --faint: #ffffff; --chip-text: #ffffff;
+  --accent: #00ffe1; --on-accent: #000000; --hint: #ffd24d; --danger: #ff7a6b; --drop: #7fb6ff; --on-hint: #000000; --on-danger: #000000; --on-wet: #000000;
+  --line-night: #d4ccff; --on-line-night: #000000;
+  --bar-dry: rgba(0, 255, 225, 0.6); --bar-wet: #7fb6ff; --bar-track: rgba(255, 255, 255, 0.22);
+  --glass: #000000; --glass-line: rgba(255, 255, 255, 0.6); --sep: rgba(255, 255, 255, 0.6);
+  --chip-bg: #000000; --chip-line: rgba(255, 255, 255, 0.6); --card-bg: #000000; --bg: #000000; --panel: #000000;
+  --line: rgba(255, 255, 255, 0.58); --field: rgba(255, 255, 255, 0.08); --bar-bg: #000000;
+}
+body[data-theme="y2k"][data-sky="night"], [data-preview="y2k"] {
+  --text: #f4f7ff; --muted: #cdd5ff; --faint: #c3ccf7; --chip-text: #f4f7ff;
+  --accent: #7ee8ff; --on-accent: #04103a; --hint: #ffd27a; --danger: #ff9a8a; --drop: #8fc4ff;
+  --line-night: #d0b8ff; --on-line-night: #1b0b45;
+  --bar-dry: rgba(126, 232, 255, 0.5); --bar-wet: rgba(196, 220, 255, 0.95); --bar-track: rgba(255, 255, 255, 0.12);
+  --glass-line: rgba(160, 200, 255, 0.5); --sep: rgba(200, 215, 255, 0.2);
+  --chip-bg: linear-gradient(180deg, #3b3f9e, #151a5c); --chip-line: rgba(160, 200, 255, 0.55);
+  --card-bg: rgba(14, 18, 70, 0.92); --bg: #070a2e; --panel: #11164a; --line: rgba(200, 215, 255, 0.22); --field: rgba(5, 8, 36, 0.55);
+  --bar-bg: radial-gradient(1px 1px at 12% 30%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 38% 70%, #fff 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 61% 22%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 83% 58%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 18%, #fff 50%, transparent 51%), radial-gradient(ellipse at 80% 120%, rgba(150, 90, 220, 0.55), transparent 60%),
+    linear-gradient(180deg, #070a2e 0%, #141a63 62%, #2a2275 100%);
+}
+body[data-theme="y2k"][data-sky="day"] {
+  color-scheme: light;
+  --text: #0b2a5b; --muted: #163a66; --faint: #163a66; --chip-text: #0b2a5b;
+  --accent: #0d5fc4; --on-accent: #ffffff; --hint: #a35600; --danger: #a3241a; --drop: #0d5fc4; --on-hint: #ffffff; --on-danger: #ffffff; --on-wet: #ffffff;
+  --line-night: #4b2fb0; --on-line-night: #ffffff;
+  --bar-dry: rgba(13, 95, 196, 0.38); --bar-wet: rgba(13, 95, 196, 0.85); --bar-track: rgba(255, 255, 255, 0.5);
+  --glass-line: rgba(255, 255, 255, 0.85); --sep: rgba(11, 42, 91, 0.2);
+  --chip-bg: linear-gradient(180deg, #bfe3ff, #6fb8ff); --chip-line: rgba(255, 255, 255, 0.85);
+  --card-bg: rgba(234, 246, 255, 0.94); --bg: #8fcaff; --panel: #e6f3ff; --line: rgba(11, 42, 91, 0.24); --field: rgba(255, 255, 255, 0.72);
+  --bar-bg: radial-gradient(ellipse 18% 40% at 20% 30%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(ellipse 14% 30% at 70% 20%, rgba(255, 255, 255, 0.7), transparent 70%),
+    linear-gradient(180deg, #4aa8ff 0%, #8fcfff 55%, #d9efff 100%);
+}
+/* Comic: Stil des bisherigen Dagobert-Themes (Tusche, Rasterpunkte, gelber Erzählkasten), ohne geschützte Figur */
+body[data-theme="comic"], [data-preview="comic"] {
+  color-scheme: light;
+  --ink: #111111; --caption: #ffd400; --dots: rgba(255, 255, 255, 0.45); --sky-base: #8fd3ff;
+  --text: #111111; --muted: #262626; --faint: #2e2e2e; --chip-text: #111111;
+  --accent: #c4161c; --on-accent: #ffffff; --hint: #8a4500; --danger: #a3121a; --drop: #1456b8; --on-hint: #ffffff; --on-danger: #ffffff; --on-wet: #ffffff;
+  --line-night: #2b2b8f; --on-line-night: #ffffff;
+  --bar-dry: rgba(20, 86, 184, 0.35); --bar-wet: #1456b8; --bar-track: rgba(255, 255, 255, 0.75);
+  --glass-line: #111111; --sep: #111111; --chip-bg: #ffd400; --chip-line: #111111;
+  --card-bg: #fffbe8; --bg: #8fd3ff; --panel: #fffbe8; --line: rgba(17, 17, 17, 0.55); --field: #ffffff;
+  --bar-bg: radial-gradient(circle, var(--dots) 1.3px, transparent 1.8px) 0 0 / 8px 8px, var(--sky-base);
+}
+body[data-theme="comic"][data-sky="night"] {
+  color-scheme: dark;
+  --dots: rgba(255, 255, 255, 0.08); --sky-base: #1a2a6c;
+  --text: #ffffff; --muted: #e4e9ff; --faint: #dce2ff; --accent: #ffd400; --on-accent: #111111; --hint: #ffd400; --on-hint: #111111; --on-danger: #111111; --on-wet: #111111;
+  --danger: #ff8f84; --drop: #8fc4ff; --bar-dry: rgba(255, 212, 0, 0.45); --bar-wet: #8fc4ff; --bar-track: rgba(255, 255, 255, 0.14);
+  --card-bg: #18245e; --bg: #121c4d; --panel: #18245e; --line: rgba(255, 255, 255, 0.4); --field: #0e1640;
+  --line-night: #c9bfff; --on-line-night: #111111;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  --s: 1;
+  --t: calc(var(--s) * 1.1);
+  --gap: 16px;
+  --bar-h: calc(176px * var(--s));
+  --col-clock: calc(212px * var(--s));
+  --col-transit: calc(410px * var(--s));
+  --dock-h: 210px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Bühne ---------- */
+.kiosk { position: fixed; inset: 0; overflow: hidden; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #16213a; }
+.stream-shade { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--dock-h) + 120px); pointer-events: none;
+  background: linear-gradient(0deg, rgba(4, 9, 12, 0.62), transparent); }
+.stream-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px 16px calc(var(--dock-h) + 2 * var(--gap));
+  background: radial-gradient(circle at 50% 36%, #17272f, #071017 68%); }
+.empty-card { display: grid; justify-items: center; gap: 10px; width: min(460px, 100%); padding: 30px 28px 26px; text-align: center;
+  border: 1px solid var(--glass-line); border-radius: 22px; background: var(--card-bg); color: var(--text); }
+.empty-card svg { width: 44px; height: 44px; fill: none; stroke: var(--hint); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.empty-card strong { font-size: 26px; font-weight: 600; line-height: 1.15; text-wrap: balance; }
+.empty-card span { color: var(--muted); font-size: 16px; font-weight: 500; line-height: 1.4; }
+.empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+
+/* ---------- Bedienelemente oben ---------- */
+.menu-button { position: absolute; z-index: 20; top: calc(var(--gap) + env(safe-area-inset-top, 0px)); left: max(var(--gap), env(safe-area-inset-left, 0px));
+  display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border: 1px solid var(--chip-line); border-radius: 16px;
+  color: var(--chip-text); background: var(--chip-bg); backdrop-filter: blur(12px); transition: opacity 600ms ease, transform 120ms ease; }
+.menu-button svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.menu-button.is-idle { opacity: 0.32; }
+.menu-button:active { transform: scale(0.96); }
+
+.stream-chip { position: absolute; z-index: 19; top: calc(var(--gap) + 62px + env(safe-area-inset-top, 0px)); left: max(var(--gap), env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 10px; max-width: min(560px, calc(100vw - 2 * var(--gap))); padding: 8px 14px 8px 10px;
+  border: 1px solid var(--chip-line); border-radius: 12px; background: var(--card-bg); color: var(--text); box-shadow: var(--glass-shadow);
+  transition: opacity 500ms ease, transform 500ms ease; }
+.stream-chip.is-gone { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+.live-pill { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 6px; background: var(--live); color: #fff;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
+.live-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.35; } }
+.chip-text { display: flex; flex-direction: column; min-width: 0; }
+.chip-text strong, .chip-text span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-text strong { font-size: 16px; font-weight: 600; line-height: 1.2; }
+.chip-text span { color: var(--muted); font-size: 13px; font-weight: 500; }
+
+/* Songkarte */
+.now-playing { position: absolute; z-index: 20; top: calc(var(--gap) + env(safe-area-inset-top, 0px)); right: max(var(--gap), env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 10px; width: max-content; max-width: min(calc(360px * var(--s)), calc(100vw - 2 * var(--gap) - 70px));
+  padding: 8px 16px 11px 8px; overflow: hidden; border: 1px solid var(--glass-line); border-radius: calc(18px * var(--s));
+  background: var(--card-bg); color: var(--text); box-shadow: var(--glass-shadow); }
+.np-open { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0; border: 0; background: none; text-align: left; }
+.np-art { flex: 0 0 auto; width: calc(52px * var(--s)); height: calc(52px * var(--s)); border-radius: 10px; overflow: hidden;
+  background: linear-gradient(135deg, #2c4a5a, #0f2430 55%, #5ed6c4 140%); display: grid; place-items: center; }
+.np-art svg { width: 55%; height: 55%; fill: none; stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.np-head { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.np-head strong, .np-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-head strong { font-size: calc(17px * var(--t)); font-weight: 600; line-height: 1.2; }
+.np-head span { color: var(--muted); font-size: calc(13.5px * var(--t)); font-weight: 500; }
+.np-line { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--bar-track); }
+.np-line i { display: block; height: 100%; width: 0; background: var(--accent); }
+.np-more { display: none; }
+.now-playing.is-open { width: min(calc(320px * var(--s)), calc(100vw - 2 * var(--gap) - 70px)); padding: 14px; }
+.now-playing.is-open .np-open { flex-direction: column; align-items: stretch; }
+.now-playing.is-open .np-art { width: 100%; height: auto; aspect-ratio: 1; max-width: 100%; }
+.now-playing.is-open .np-more { display: grid; gap: 12px; }
+.now-playing.is-open .np-line { display: none; }
+.np-progress { display: flex; align-items: center; gap: 8px; }
+.np-track { flex: 1; height: 5px; border-radius: 3px; overflow: hidden; background: var(--bar-track); }
+.np-track i { display: block; height: 100%; width: 0; background: var(--accent); }
+.np-time { color: var(--faint); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.np-controls { display: flex; justify-content: center; gap: 12px; }
+.round-btn { display: grid; place-items: center; width: var(--touch); height: var(--touch); padding: 0; border: 1px solid var(--glass-line);
+  border-radius: 50%; background: var(--bar-track); color: var(--text); }
+.round-btn svg { width: 52%; height: 52%; fill: currentColor; }
+.round-btn.is-main { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+/* ---------- Infoleiste ---------- */
+.dock { position: absolute; z-index: 5; left: max(var(--gap), env(safe-area-inset-left, 0px)); right: max(var(--gap), env(safe-area-inset-right, 0px));
+  bottom: calc(var(--gap) + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.warning { display: flex; align-items: center; gap: 10px; max-width: 100%; padding: 8px 14px 8px 10px; border-radius: 12px;
+  background: var(--warn-bg); color: var(--warn-text); box-shadow: var(--glass-shadow); font-size: calc(16px * var(--t)); font-weight: 600; }
+.warning svg { flex: 0 0 auto; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.warning span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.warning small { font-size: 0.82em; font-weight: 500; opacity: 0.85; }
+.infobar { position: relative; width: 100%; display: grid; grid-template-columns: minmax(var(--col-clock), max-content) 1px minmax(0, 1fr) 1px var(--col-transit);
+  height: var(--bar-h); overflow: hidden; border: 1px solid var(--glass-line); border-radius: calc(22px * var(--s));
+  background: var(--bar-bg); backdrop-filter: blur(18px) saturate(1.2); box-shadow: var(--glass-shadow); }
+.ib-sep { width: 1px; margin: calc(22px * var(--s)) 0; background: var(--sep); }
+.ib-block { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+
+.ib-clock { padding: calc(20px * var(--s)) calc(22px * var(--s)) calc(18px * var(--s)); }
+.clock-time { font-size: calc(66px * var(--t)); font-weight: 600; line-height: 0.92; letter-spacing: -0.02em; }
+.clock-date { margin-top: calc(8px * var(--s)); color: var(--muted); font-size: calc(18px * var(--t)); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clock-sys { display: flex; align-items: center; gap: 7px; margin-top: auto; color: var(--faint); font-size: calc(13px * var(--t)); font-weight: 500; white-space: nowrap; overflow: hidden; }
+.dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.dot.is-warn { background: var(--hint); }
+.dot.is-bad { background: var(--danger); }
+
+.ib-weather { padding: calc(18px * var(--s)) calc(24px * var(--s)) calc(14px * var(--s)); }
+.weather-head { display: flex; align-items: center; gap: calc(14px * var(--s)); min-width: 0; }
+.weather-icon { flex: 0 0 auto; width: calc(46px * var(--s)); height: calc(46px * var(--s)); }
+.weather-icon svg { display: block; width: 100%; height: 100%; fill: none; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.wi-sun, .wi-bolt { stroke: var(--hint); }
+.wi-cloud, .wi-moon { stroke: var(--text); }
+.wi-drop { stroke: var(--drop); }
+.weather-temp { flex: 0 0 auto; font-size: calc(58px * var(--t)); font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+.weather-desc { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.weather-condition, .weather-details { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.weather-condition { font-size: calc(20px * var(--t)); font-weight: 600; line-height: 1.2; }
+.weather-details { color: var(--muted); font-size: calc(15px * var(--t)); font-weight: 500; }
+.rain-strip { margin-top: auto; }
+.rain-head { display: flex; justify-content: space-between; gap: 10px; font-size: calc(14px * var(--t)); line-height: 1.2; white-space: nowrap; }
+.rain-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-weight: 500; }
+.rain-summary { flex: 0 0 auto; max-width: 78%; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text); font-weight: 600; }
+.rain-summary.is-stale { color: var(--hint); }
+.rain-tracks { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; height: calc(32px * var(--s)); margin-top: calc(6px * var(--s)); }
+.rain-track { position: relative; overflow: hidden; border-radius: 5px; background: var(--bar-track); }
+.rain-bar { position: absolute; left: 0; right: 0; bottom: 0; min-height: 3px; background: var(--bar-dry); }
+.rain-bar.is-wet { background: var(--bar-wet); }
+.rain-peak { position: absolute; left: 0; right: 0; text-align: center; font-size: calc(11px * var(--t)); font-weight: 700; color: var(--text); line-height: 1; }
+.rain-bar.is-wet + .rain-peak.inside { color: var(--on-wet); }
+.rain-threshold { position: absolute; left: -2px; right: -2px; height: 0; border-top: 1.5px dashed var(--muted); opacity: 0.7; pointer-events: none; }
+.rain-hours { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-top: calc(4px * var(--s)); }
+.rain-hours span { text-align: center; color: var(--faint); font-size: calc(13px * var(--t)); line-height: 1.2; }
+.rain-hours span.is-now { color: var(--text); font-weight: 600; }
+
+.ib-transit { padding: calc(15px * var(--s)) calc(22px * var(--s)) calc(12px * var(--s)); }
+.transit-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin-bottom: calc(3px * var(--s)); font-size: calc(14px * var(--t)); font-weight: 600; white-space: nowrap; }
+.transit-head .station { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-weight: 500; }
+.transit-head .rt { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--faint); font-weight: 500; font-size: 0.86em; }
+.transit-head .rt svg { width: 14px; height: 14px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.boards { display: flex; flex-direction: column; min-height: 0; }
+.departure { display: grid; grid-template-columns: calc(50px * var(--s)) minmax(0, 1fr) auto; column-gap: calc(14px * var(--s)); align-items: center; height: calc(42px * var(--s)); }
+.line-badge { display: grid; place-items: center; height: calc(30px * var(--s)); padding: 0 4px; overflow: hidden; border-radius: calc(8px * var(--s));
+  color: var(--on-accent); background: var(--accent); font-family: var(--font-cond); font-size: calc(19px * var(--t)); font-weight: 700; line-height: 1; white-space: nowrap; }
+.line-badge.is-night { background: var(--line-night); color: var(--on-line-night); }
+.dep-main { display: flex; flex-direction: column; min-width: 0; }
+.dep-target, .dep-sub, .dep-error { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dep-target { font-size: calc(19px * var(--t)); font-weight: 600; line-height: 1.15; }
+.dep-sub { color: var(--faint); font-size: calc(13px * var(--t)); font-weight: 500; }
+.dep-time { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.dep-num { font-size: calc(30px * var(--t)); font-weight: 600; line-height: 1; }
+.dep-unit { color: var(--muted); font-size: calc(15px * var(--t)); font-weight: 500; margin-left: -3px; }
+.dep-clock { font-size: calc(26px * var(--t)); font-weight: 600; line-height: 1; }
+.dep-now { color: var(--accent); font-size: calc(26px * var(--t)); font-weight: 700; line-height: 1; }
+.delay { align-self: center; padding: 1px 6px; border-radius: 6px; font-size: calc(13px * var(--t)); font-weight: 700; color: var(--on-hint); background: var(--hint); }
+.delay.is-big { background: var(--danger); color: var(--on-danger); }
+.departure.is-error .dep-main { grid-column: 2 / -1; }
+.dep-icon { display: grid; place-items: center; }
+.dep-icon svg { width: calc(22px * var(--s)); height: calc(22px * var(--s)); fill: none; stroke: var(--danger); stroke-width: 2; stroke-linecap: round; }
+.dep-error { color: var(--danger); font-size: calc(17px * var(--t)); font-weight: 600; }
+
+/* ---------- Layoutprofile ---------- */
+body[data-layout="minimal"] { --s: 0.86; --col-transit: calc(350px * var(--s)); }
+body[data-layout="information"] { --s: 1.25; }
+body[data-layout="portrait"] { --s: 0.9; }
+body[data-layout="portrait"] .infobar { height: auto; grid-template-columns: max-content minmax(0, 1fr) !important; grid-template-rows: auto auto; }
+body[data-layout="portrait"] .ib-sep { display: none; }
+body[data-layout="portrait"] .ib-clock { grid-column: 1; grid-row: 1; border-right: 1px solid var(--sep); }
+body[data-layout="portrait"] .ib-weather { grid-column: 2; grid-row: 1; }
+body[data-layout="portrait"] .ib-transit { grid-column: 1 / -1; grid-row: 2; border-top: 1px solid var(--sep); }
+body[data-layout="portrait"] .ib-clock, body[data-layout="portrait"] .ib-weather { min-height: calc(176px * var(--s)); }
+@media (max-width: 520px) {
+  body[data-layout="portrait"] { --s: 0.72; }
+  body[data-layout="portrait"] .weather-head { flex-wrap: wrap; row-gap: 4px; }
+  body[data-layout="portrait"] .weather-desc { flex-basis: 100%; }
+  body[data-layout="portrait"] .clock-date { white-space: normal; }
+}
+
+/* ---------- Themes: Sonderformen ---------- */
+body[data-theme="high-contrast"] .infobar { backdrop-filter: none; }
+body[data-theme="y2k"] .infobar { backdrop-filter: none; border-width: 2px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 6px rgba(0, 0, 0, 0.12), 0 18px 44px rgba(0, 0, 0, 0.35); }
+body[data-theme="y2k"] .infobar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0) 52%); opacity: 0.5; }
+body[data-theme="y2k"] .line-badge { border-radius: 999px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0, 0, 0, 0.25); }
+body[data-theme="comic"] .infobar { backdrop-filter: none; border: 4px solid var(--ink); border-radius: 6px; box-shadow: 0 0 0 3px #fffbe8, 9px 9px 0 3px var(--ink); }
+body[data-theme="comic"] .ib-sep { margin: 0; background: var(--ink); width: 3px; }
+body[data-theme="comic"] .ib-clock { background: var(--caption); color: #111; }
+body[data-theme="comic"] .ib-clock .clock-date, body[data-theme="comic"] .ib-clock .clock-sys { color: #262626; }
+body[data-theme="comic"] .clock-time, body[data-theme="comic"] .weather-temp { font-family: var(--font-cond); font-weight: 700; }
+body[data-theme="comic"] .weather-temp { color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink); }
+body[data-theme="comic"][data-sky="night"] .weather-temp { color: var(--caption); }
+body[data-theme="comic"] .line-badge { color: #111; background: var(--caption); border: 3px solid var(--ink); border-radius: 999px; box-shadow: 2px 2px 0 var(--ink); }
+body[data-theme="comic"] .line-badge.is-night { background: #fff; }
+body[data-theme="comic"] .rain-track { border: 2px solid var(--ink); border-radius: 3px; }
+body[data-theme="comic"] .menu-button, body[data-theme="comic"] .now-playing, body[data-theme="comic"] .stream-chip { border: 3px solid var(--ink); border-radius: 8px; box-shadow: 4px 4px 0 var(--ink); }
+body[data-theme="comic"] .transit-head, body[data-theme="comic"] .weather-condition { text-transform: uppercase; letter-spacing: 0.04em; }
+body[data-theme="comic"][data-sky="day"] :is(.ib-weather, .ib-transit) { text-shadow: 0 0 2px #fff, 0 0 4px #fff; }
+body[data-theme="comic"][data-sky="night"] :is(.ib-weather, .ib-transit) { text-shadow: 0 0 3px #1a2a6c; }
+
+/* ---------- Knöpfe, Felder ---------- */
+.button { min-height: var(--touch); padding: 0 20px; border: 1px solid transparent; border-radius: 10px; font-weight: 700; font-size: 16px; }
+.button-primary { color: var(--on-accent); background: var(--accent); }
+.button-secondary { color: var(--text); border-color: var(--line); background: var(--field); }
+.button-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); background: transparent; }
+.button:disabled { opacity: 0.45; cursor: not-allowed; }
+.icon-button { display: grid; place-items: center; width: var(--touch); height: var(--touch); padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--field); color: var(--text); }
+.icon-button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+body[data-theme="comic"] :is(.button, .icon-button, .menu-tab, .seg button) { border: 3px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
+
+/* ---------- Menü ---------- */
+dialog { padding: 0; border: 0; background: transparent; color: var(--text); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.74); }
+.menu { width: calc(100vw - 24px); height: calc(100% - 24px); max-width: 1240px; max-height: none; }
+.menu-shell { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; overflow: hidden; border: 1px solid var(--line); border-radius: 18px;
+  background: var(--panel); box-shadow: 0 28px 80px rgba(0, 0, 0, 0.54); }
+body[data-theme="comic"] .menu-shell { border: 4px solid var(--ink); border-radius: 6px; background: radial-gradient(circle, var(--dots) 1.3px, transparent 1.8px) 0 0 / 8px 8px, var(--panel); }
+.menu-header { display: flex; align-items: center; gap: 16px; padding: 12px 14px 12px 20px; border-bottom: 1px solid var(--line); }
+.menu-header h1 { margin: 0; font-size: 1.45rem; font-weight: 600; }
+.menu-tabs { display: flex; flex: 1 1 auto; gap: 6px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.menu-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 16px; border: 1px solid var(--line); border-radius: 12px;
+  color: var(--muted); background: transparent; font-size: 1.02rem; font-weight: 600; white-space: nowrap; }
+.menu-tab svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.menu-tab[aria-selected="true"] { color: var(--on-accent); border-color: var(--accent); background: var(--accent); }
+.menu-content { overflow-y: auto; padding: 22px 24px 32px; }
+.menu-panel { display: grid; gap: 18px; max-width: 980px; }
+.menu-panel[hidden] { display: none; }
+.menu-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; border-top: 1px solid var(--line); }
+.save-state { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.95rem; font-weight: 500; }
+.save-state .dot { background: var(--faint); }
+.save-state.is-dirty { color: var(--text); }
+.save-state.is-dirty .dot { background: var(--hint); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 6px 0 0; font-size: 1.08rem; font-weight: 700; }
+.section-title small { color: var(--faint); font-size: 0.85rem; font-weight: 500; }
+.hint { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.45; max-width: 68ch; }
+.now-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--field); }
+.now-card canvas { width: 128px; height: 72px; border-radius: 8px; display: block; max-width: 100%; }
+.now-card strong { display: block; font-size: 1.08rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now-card span { color: var(--muted); font-size: 0.9rem; }
+.state-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+.state-pill .dot { width: 7px; height: 7px; }
+.search-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > span { color: var(--muted); font-size: 0.86rem; font-weight: 600; }
+.field input, .field select { width: 100%; min-height: 52px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); color: var(--text); font-size: 1.05rem; }
+.field select option { background: var(--panel); color: var(--text); }
+.field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.live-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.live-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 0 0 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--field); color: var(--text); text-align: left; }
+.live-card canvas { display: block; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; }
+.live-card .live-pill { position: absolute; top: 8px; left: 8px; }
+.live-card .now-badge { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 6px; background: var(--accent); color: var(--on-accent); font-size: 0.78rem; font-weight: 700; }
+.live-card strong { padding: 0 12px; font-size: 1rem; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.live-card span { padding: 0 12px; color: var(--muted); font-size: 0.86rem; }
+.live-card.is-current { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.list { display: grid; gap: 8px; }
+.row-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--field); color: var(--text); text-align: left; }
+.row-card > div { display: flex; flex-direction: column; min-width: 0; }
+.row-card strong { font-size: 1.04rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-card span { color: var(--muted); font-size: 0.88rem; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+body[data-theme="comic"] .seg { border: 0; gap: 8px; overflow: visible; }
+.seg button { min-height: 48px; padding: 0 18px; border: 0; background: transparent; color: var(--muted); font-weight: 700; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.theme-card { display: grid; gap: 8px; padding: 8px 8px 10px; border: 1px solid var(--line); border-radius: 14px; background: transparent; color: var(--text); text-align: left; }
+.theme-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.theme-card strong { padding: 0 4px; font-size: 0.98rem; font-weight: 600; }
+.mini { position: relative; height: 82px; border-radius: 9px; overflow: hidden; background: linear-gradient(180deg, #30466a, #a8786a 80%, #1a1f26); }
+.mini-bar { position: absolute; left: 6px; right: 6px; bottom: 6px; height: 34px; display: grid; grid-template-columns: 1fr 1.4fr 1.2fr; gap: 6px; align-items: center; padding: 0 8px;
+  border: 1px solid var(--glass-line); border-radius: 8px; background: var(--bar-bg); color: var(--text); font-size: 13px; font-weight: 700; }
+[data-preview="comic"] .mini-bar { border: 2px solid var(--ink); border-radius: 3px; }
+.mini-bar i { display: block; height: 6px; border-radius: 3px; background: var(--muted); opacity: 0.6; }
+.mini-bar b { justify-self: end; padding: 1px 6px; border-radius: 4px; background: var(--accent); color: var(--on-accent); font-size: 11px; }
+.switch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--field); font-weight: 600; cursor: pointer; }
+.switch input { appearance: none; position: relative; flex: 0 0 auto; width: 46px; height: 28px; margin: 0; border-radius: 999px; background: var(--bar-track); border: 1px solid var(--line); cursor: pointer; transition: background 150ms ease; }
+.switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--muted); transition: transform 150ms ease, background 150ms ease; }
+.switch input:checked { background: var(--accent); border-color: var(--accent); }
+.switch input:checked::after { transform: translateX(18px); background: var(--on-accent); }
+.stop-card { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--field); }
+.stop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stop-head strong { font-size: 1.08rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-weight: 600; font-size: 0.92rem; background: transparent; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.diag { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+.diag th, .diag td { padding: 11px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+.diag th { color: var(--faint); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.diag td:first-child { font-weight: 600; }
+.diag .ok { color: var(--accent); }
+.diag .warn { color: var(--hint); }
+.diag .bad { color: var(--danger); }
+.table-wrap { overflow-x: auto; }
+.player-now { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px 14px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--field); }
+.player-now .np-art { width: 64px; height: 64px; }
+.player-now strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-now span { color: var(--muted); font-size: 0.9rem; }
+.transport { display: flex; gap: 8px; }
+.volume { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.88rem; font-weight: 600; }
+.volume input { flex: 1; accent-color: var(--accent); height: 36px; }
+
+/* ---------- Toast ---------- */
+.toast { position: fixed; z-index: 200; left: 50%; bottom: calc(var(--dock-h) + 2 * var(--gap) + 8px); transform: translateX(-50%); max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3); font-weight: 600; }
+
+/* ---------- Vorschau-Werkzeug (gehört nicht zur App) ---------- */
+.pv-toggle { position: fixed; z-index: 60; top: calc(var(--gap) + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px dashed rgba(242, 196, 107, 0.8); border-radius: 999px;
+  background: rgba(20, 16, 6, 0.86); color: #f8e7c0; font-family: var(--font); font-size: 14px; font-weight: 600; letter-spacing: 0.02em; }
+.pv-toggle b { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--mk-bg); color: var(--mk-text); font-size: 12px; }
+.pv-panel { position: fixed; z-index: 61; top: calc(var(--gap) + 48px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  width: min(560px, calc(100vw - 32px)); max-height: calc(100% - 140px); overflow-y: auto; padding: 16px 18px 18px; border: 1px solid rgba(242, 196, 107, 0.45);
+  border-radius: 16px; background: #15130d; color: #f3ead6; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); font-family: var(--font); }
+.pv-panel h2 { margin: 0 0 4px; font-size: 1.15rem; font-weight: 700; }
+.pv-panel p { margin: 0 0 12px; color: #c9bfa8; font-size: 0.92rem; line-height: 1.45; }
+.pv-panel h3 { margin: 16px 0 8px; color: #d8c79c; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.pv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pv-chips button { min-height: 38px; padding: 0 12px; border: 1px solid rgba(243, 234, 214, 0.25); border-radius: 999px; background: transparent; color: #f3ead6; font-weight: 600; font-size: 0.92rem; }
+.pv-chips button[aria-pressed="true"] { background: #f2c46b; border-color: #f2c46b; color: #1d1400; }
+.pv-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.pv-list li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; padding: 7px 8px; border-radius: 8px; font-size: 0.93rem; line-height: 1.4; cursor: default; }
+.pv-list li:hover, .pv-list li.is-hot { background: rgba(242, 196, 107, 0.1); }
+.pv-list li b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--mk-bg); color: var(--mk-text); font-size: 12px; margin-top: 1px; }
+.pv-list li i { font-style: normal; color: #b5a98c; font-size: 0.86rem; }
+.pv-list.is-plain li { grid-template-columns: 14px minmax(0, 1fr); }
+.pv-list.is-plain li::before { content: ""; width: 6px; height: 6px; margin-top: 8px; border-radius: 50%; background: #d8c79c; }
+.pv-switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; font-weight: 600; font-size: 0.95rem; }
+.pv-switch input { width: 20px; height: 20px; accent-color: #f2c46b; }
+.mk-layer { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+.mk { position: absolute; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 2px solid rgba(0, 0, 0, 0.55); border-radius: 50%;
+  background: var(--mk-bg); color: var(--mk-text); font-family: var(--font); font-size: 12px; font-weight: 700; pointer-events: auto; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
+.mk.is-hot { transform: scale(1.25); }
+.mk-pop { position: fixed; z-index: 62; width: min(300px, calc(100vw - 32px)); padding: 12px 14px; border-radius: 12px; background: #15130d; color: #f3ead6;
+  border: 1px solid rgba(242, 196, 107, 0.45); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); font-family: var(--font); font-size: 0.92rem; line-height: 1.45; }
+.mk-pop strong { display: block; margin-bottom: 4px; }
+.mk-target { outline: 2px dashed var(--mk-bg) !important; outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .menu { width: 100vw; height: 100%; }
+  .menu-shell { border-radius: 0; }
+  .menu-header { padding: 10px 10px 10px 14px; gap: 10px; }
+  .menu-header h1 { display: none; }
+  .menu-tab { padding: 0 12px; }
+  .menu-tab span { display: none; }
+  .menu-tab[aria-selected="true"] span { display: inline; }
+  .menu-content { padding: 16px 16px 28px; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .menu-footer { flex-direction: column; align-items: stretch; }
+  .menu-footer .actions .button { flex: 1; }
+  .now-card { grid-template-columns: minmax(0, 1fr) auto; }
+  .now-card canvas { display: none; }
+  .search-row { grid-template-columns: 1fr; }
+  .stream-chip { top: calc(var(--gap) + 62px); }
+  .pv-toggle span { display: none; }
+  .pv-toggle { left: calc(var(--gap) + 62px); transform: none; }
+  .pv-panel { top: calc(var(--gap) + 62px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="kiosk" id="kiosk">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="stream-shade" aria-hidden="true"></div>
+
+  <div class="stream-empty" id="streamEmpty" hidden>
+    <div class="empty-card" data-mk="12">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M8.5 6H14a2 2 0 0 1 2 2v2.5l5-3v9l-1.6-.96"/><path d="M16 16v.1A1.9 1.9 0 0 1 14.1 18H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h.5"/></svg>
+      <strong>Noch kein Livestream ausgewählt</strong>
+      <span>Wähle einen Stream aus allem, was gerade auf YouTube live ist. Ein Schlüssel ist nicht nötig.</span>
+      <div class="empty-actions">
+        <button class="button button-primary" type="button" id="emptyPick">Livestream auswählen</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="menu-button" id="menuBtn" type="button" aria-label="Menü öffnen" data-mk="8">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+
+  <div class="stream-chip" id="streamChip" role="status" aria-live="polite" data-mk="7">
+    <span class="live-pill">LIVE</span>
+    <span class="chip-text"><strong id="chipTitle">Live Storchennest Kirchzarten</strong><span id="chipChannel">regiowebcam · seit 3 Std. live</span></span>
+  </div>
+
+  <aside class="now-playing" id="nowPlaying" aria-label="Läuft gerade" data-mk="9">
+    <button class="np-open" id="npOpen" type="button" aria-expanded="false">
+      <span class="np-art"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span>
+      <span class="np-head"><strong id="npTitle">Gymnopédie No. 1</strong><span id="npArtist">Erik Satie · YouTube Music</span></span>
+    </button>
+    <div class="np-more">
+      <div class="np-progress"><span class="np-track"><i id="npBar"></i></span><span class="np-time" id="npTime">1:40 / 3:05</span></div>
+      <div class="np-controls">
+        <button class="round-btn" type="button" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+        <button class="round-btn is-main" type="button" id="npToggle" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+        <button class="round-btn" type="button" aria-label="Vor"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+      </div>
+    </div>
+    <span class="np-line" aria-hidden="true"><i id="npLine"></i></span>
+  </aside>
+
+  <div class="dock" id="dock">
+    <div class="warning" id="warning" role="alert" hidden data-mk="10">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.2M12 17h.01"/></svg>
+      <span>Amtliche Warnung vor Sturmböen bis 23 Uhr <small>· Deutscher Wetterdienst</small></span>
+    </div>
+    <section class="infobar" id="infobar" aria-label="Zusatzinformationen" data-mk="11">
+      <section class="ib-block ib-clock" id="clockBlock" aria-label="Uhrzeit">
+        <strong class="clock-time" id="clock">--:--</strong>
+        <span class="clock-date" id="date">--</span>
+        <span class="clock-sys" id="sys" data-mk="3"><span class="dot" id="sysDot"></span><span id="sysText">RAM 42 % · 51 °C</span></span>
+      </section>
+      <span class="ib-sep" aria-hidden="true"></span>
+      <section class="ib-block ib-weather" id="weatherBlock" aria-label="Wetter">
+        <div class="weather-head">
+          <span class="weather-icon" id="weatherIcon"></span>
+          <span class="weather-temp" id="weatherTemp">9°</span>
+          <div class="weather-desc">
+            <strong class="weather-condition" id="weatherCond">Bedeckt</strong>
+            <span class="weather-details" id="weatherDetails" data-mk="2">gefühlt 6° · Wind 21 km/h · Luftfeuchte 87 %</span>
+          </div>
+        </div>
+        <div class="rain-strip" data-mk="1">
+          <div class="rain-head"><span class="rain-label" id="rainLabel">Regenwahrscheinlichkeit</span><span class="rain-summary" id="rainSummary"></span></div>
+          <div class="rain-tracks" id="rainTracks"></div>
+          <div class="rain-hours" id="rainHours"></div>
+        </div>
+      </section>
+      <span class="ib-sep" aria-hidden="true"></span>
+      <section class="ib-block ib-transit" id="transitBlock" aria-label="Abfahrten">
+        <header class="transit-head"><span>Abfahrten</span><span class="station" id="transitStation"></span>
+          <span class="rt" id="rtHint"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5a7 7 0 0 1 14 0M8.5 12.5a3.5 3.5 0 0 1 7 0"/><circle cx="12" cy="13" r="1"/></svg>Echtzeit</span>
+        </header>
+        <div class="boards" id="boards" aria-live="polite"></div>
+      </section>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Menü -->
+<dialog class="menu" id="menu" aria-labelledby="menuTitle">
+  <div class="menu-shell">
+    <header class="menu-header">
+      <h1 id="menuTitle">Menü</h1>
+      <nav class="menu-tabs" role="tablist" aria-label="Menübereiche">
+        <button class="menu-tab" role="tab" type="button" data-tab="live" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg><span>Livestream</span></button>
+        <button class="menu-tab" role="tab" type="button" data-tab="place" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Ort</span></button>
+        <button class="menu-tab" role="tab" type="button" data-tab="display" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg><span>Anzeige</span></button>
+        <button class="menu-tab" role="tab" type="button" data-tab="transit" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 20.5l1-3M15.5 20.5l-1-3"/><circle cx="8.5" cy="14.3" r=".6"/><circle cx="15.5" cy="14.3" r=".6"/></svg><span>ÖPNV</span></button>
+        <button class="menu-tab" role="tab" type="button" data-tab="music" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg><span>Musik</span></button>
+        <button class="menu-tab" role="tab" type="button" data-tab="system" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/><path d="M4 19h16"/></svg><span>System</span></button>
+      </nav>
+      <button class="icon-button" type="button" id="menuClose" aria-label="Menü schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </header>
+
+    <form class="menu-content" id="menuForm" autocomplete="off">
+      <!-- Livestream -->
+      <section class="menu-panel" data-panel="live" role="tabpanel">
+        <div class="now-card">
+          <canvas id="nowThumb" width="256" height="144" aria-hidden="true"></canvas>
+          <div style="min-width:0"><strong id="liveNowTitle">Live Storchennest Kirchzarten</strong><span id="liveNowChannel">regiowebcam · läuft seit 3 Std.</span></div>
+          <span class="state-pill"><span class="dot"></span>Spielt</span>
+        </div>
+        <div class="search-row">
+          <label class="field" for="liveQuery"><span>Live-Streams auf YouTube suchen</span><input id="liveQuery" type="search" value="Storch" placeholder="z. B. Storch, Hafen, Zoo"></label>
+          <button class="button button-primary" type="button" id="liveSearch">Suchen</button>
+        </div>
+        <p class="hint">Antippen spielt den Stream sofort ab. Diese Auswahl wird direkt übernommen und muss nicht gespeichert werden.</p>
+        <div class="live-results" id="liveResults"></div>
+      </section>
+
+      <!-- Ort -->
+      <section class="menu-panel" data-panel="place" role="tabpanel" hidden>
+        <div class="now-card" style="grid-template-columns:minmax(0,1fr) auto">
+          <div style="min-width:0"><strong id="placeNow">Musterstadt</strong><span id="placeNowSub">52,5200° N · 13,4050° O · Europe/Berlin</span></div>
+          <span class="state-pill"><span class="dot"></span>Aktiv</span>
+        </div>
+        <div class="search-row">
+          <label class="field" for="placeQuery"><span>Adresse, Straße oder Ort suchen, weltweit</span><input id="placeQuery" type="search" value="Nordpark" placeholder="z. B. Musterstraße 1 Berlin, Wien"></label>
+          <button class="button button-primary" type="button">Suchen</button>
+        </div>
+        <p class="hint">Uhr und Wetter folgen der Zeitzone des Orts. Antippen übernimmt den Ort sofort.</p>
+        <div class="list" id="placeResults"></div>
+      </section>
+
+      <!-- Anzeige -->
+      <section class="menu-panel" data-panel="display" role="tabpanel" hidden>
+        <h2 class="section-title">Theme <small>Vorschau wirkt sofort, Speichern behält es</small></h2>
+        <div class="theme-grid" id="themeGrid"></div>
+        <div class="grid-2">
+          <div class="field"><span>Layoutprofil</span>
+            <div class="seg" id="layoutSeg" role="group" aria-label="Layoutprofil">
+              <button type="button" data-layout="auto" aria-pressed="true">Automatisch</button>
+              <button type="button" data-layout="minimal" aria-pressed="false">Minimal</button>
+              <button type="button" data-layout="standard" aria-pressed="false">Standard</button>
+              <button type="button" data-layout="information" aria-pressed="false">Groß</button>
+            </div>
+          </div>
+          <label class="field" for="skySel"><span>Tag/Nacht für Y2K und Comic</span>
+            <select id="skySel"><option value="auto">Automatisch nach Sonnenstand</option><option value="day">Immer Tag</option><option value="night">Immer Nacht</option></select>
+          </label>
+        </div>
+        <h2 class="section-title">Infoleiste</h2>
+        <div class="switch-list">
+          <label class="switch" for="blkClock">Uhr<input id="blkClock" type="checkbox" checked data-block="clock"></label>
+          <label class="switch" for="blkWeather">Wetter<input id="blkWeather" type="checkbox" checked data-block="weather"></label>
+          <label class="switch" for="blkTransit">Abfahrten<input id="blkTransit" type="checkbox" checked data-block="transit"></label>
+          <label class="switch" for="blkSystem">Systemzeile<input id="blkSystem" type="checkbox" checked data-block="system"></label>
+        </div>
+      </section>
+
+      <!-- ÖPNV -->
+      <section class="menu-panel" data-panel="transit" role="tabpanel" hidden>
+        <p class="hint">Abfahrten gibt es derzeit für Haltestellen im VRR. Mit der offiziellen EFA-Schnittstelle kommen Verspätungen und Störungsmeldungen dazu.</p>
+        <div class="search-row">
+          <label class="field" for="stopQuery"><span>Haltestelle hinzufügen</span><input id="stopQuery" type="search" placeholder="z. B. Düsseldorf Hauptbahnhof"></label>
+          <button class="button button-primary" type="button">Suchen</button>
+        </div>
+        <div class="stop-card">
+          <div class="stop-head"><div><strong>Hauptstraße</strong><div class="hint">Musterstadt, Hauptstraße · ID 20018235</div></div><span class="state-pill"><span class="dot"></span>Echtzeit</span></div>
+          <div class="field"><span>Linien</span><div class="chips" data-chips><button type="button" class="chip" aria-pressed="false">Alle</button><button type="button" class="chip" aria-pressed="true">31</button><button type="button" class="chip" aria-pressed="false">26</button><button type="button" class="chip" aria-pressed="false">N2</button><button type="button" class="chip" aria-pressed="false">Nur Nachtbus</button></div></div>
+          <div class="actions"><button type="button" class="button button-secondary">Nach oben</button><button type="button" class="button button-danger">Entfernen</button></div>
+        </div>
+        <div class="stop-card">
+          <div class="stop-head"><div><strong>Rathaus</strong><div class="hint">Musterstadt, Rathaus · ID 20018101</div></div><span class="state-pill" id="rathausPill"><span class="dot"></span>Echtzeit</span></div>
+          <div class="field"><span>Linien</span><div class="chips" data-chips><button type="button" class="chip" aria-pressed="true">Alle</button><button type="button" class="chip" aria-pressed="false">26</button><button type="button" class="chip" aria-pressed="false">Nur Nachtbus</button></div></div>
+          <div class="actions"><button type="button" class="button button-secondary">Nach oben</button><button type="button" class="button button-danger">Entfernen</button></div>
+        </div>
+      </section>
+
+      <!-- Musik (vorher „Musik“ und „Abspielen“) -->
+      <section class="menu-panel" data-panel="music" role="tabpanel" hidden>
+        <div class="seg" id="musicSeg" role="group" aria-label="Musikbereich">
+          <button type="button" data-sub="play" aria-pressed="true">Wiedergabe</button>
+          <button type="button" data-sub="accounts" aria-pressed="false">Konten</button>
+          <button type="button" data-sub="speakers" aria-pressed="false">Lautsprecher</button>
+        </div>
+        <div data-subpanel="play" class="menu-panel">
+          <div class="player-now">
+            <span class="np-art"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span>
+            <div style="min-width:0"><strong>Gymnopédie No. 1</strong><span>Erik Satie · auf dem Pi · Wohnzimmer-Box</span></div>
+            <div class="transport">
+              <button class="round-btn" type="button" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+              <button class="round-btn is-main" type="button" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+              <button class="round-btn" type="button" aria-label="Vor"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+            </div>
+            <label class="volume" for="vol">Lautstärke<input id="vol" type="range" min="0" max="100" step="5" value="60"></label>
+          </div>
+          <div class="seg" role="group" aria-label="Musikdienst"><button type="button" aria-pressed="true">YouTube Music</button><button type="button" aria-pressed="false">Spotify</button></div>
+          <div class="search-row">
+            <label class="field" for="musicQuery"><span>Song, Album, Playlist oder Künstler</span><input id="musicQuery" type="search" value="Satie"></label>
+            <button class="button button-primary" type="button">Suchen</button>
+          </div>
+          <div class="list">
+            <button class="row-card" type="button"><div><strong>Gymnopédie No. 1</strong><span>Song · Erik Satie · 3:05</span></div><span class="state-pill"><span class="dot"></span>Läuft</span></button>
+            <button class="row-card" type="button"><div><strong>Gnossienne No. 1</strong><span>Song · Erik Satie · 3:40</span></div></button>
+            <button class="row-card" type="button"><div><strong>Ruhige Klaviermusik</strong><span>Eigene Playlist · 48 Titel</span></div></button>
+          </div>
+        </div>
+        <div data-subpanel="accounts" class="menu-panel" hidden>
+          <label class="field" for="musicSource"><span>Quelle für „Läuft gerade“ oben rechts</span>
+            <select id="musicSource"><option>Automatisch: was gerade verbunden ist</option><option>Nur YouTube Music</option><option>Nur Spotify</option><option>Aus</option></select></label>
+          <div class="row-card"><div><strong>YouTube Music</strong><span>Verbunden · Anmeldung am Bildschirm</span></div><div class="actions"><button type="button" class="button button-secondary">Neu anmelden</button><button type="button" class="button button-danger">Trennen</button></div></div>
+          <div class="row-card"><div><strong>Spotify</strong><span>Nicht verbunden · braucht eine eigene Client-ID</span></div><button type="button" class="button button-primary">Verbinden</button></div>
+        </div>
+        <div data-subpanel="speakers" class="menu-panel" hidden>
+          <div class="row-card"><div><strong>Wohnzimmer-Box</strong><span>Verbunden · spielt den Ton des Pi</span></div><button type="button" class="button button-secondary">Trennen</button></div>
+          <div class="row-card"><div><strong>Küche</strong><span>Gekoppelt · nicht in Reichweite</span></div><button type="button" class="button button-secondary">Verbinden</button></div>
+          <div class="actions"><button type="button" class="button button-primary">Lautsprecher suchen</button></div>
+          <p class="hint">Lautsprecher vorher in den Kopplungsmodus schalten, meist durch langes Drücken der Bluetooth-Taste.</p>
+        </div>
+      </section>
+
+      <!-- System -->
+      <section class="menu-panel" data-panel="system" role="tabpanel" hidden>
+        <h2 class="section-title">Diagnose <small id="diagStamp">Stand jetzt</small></h2>
+        <div class="table-wrap">
+          <table class="diag" id="diag">
+            <thead><tr><th>Datenquelle</th><th>Zustand</th><th>Letzte Antwort</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="hint">Version 0.2.0-beta.1 · läuft seit 2 Std. 3 Min. · Konfiguration gesichert in data/config.json.bak</p>
+        <div class="grid-2">
+          <label class="field" for="ytKey"><span>YouTube-API-Schlüssel (optional)</span><input id="ytKey" type="password" placeholder="AIza…"></label>
+          <label class="field" for="ytQuery"><span>Suchwort beim Öffnen der Livestream-Auswahl</span><input id="ytQuery" type="text" value="Storch"></label>
+        </div>
+      </section>
+    </form>
+
+    <footer class="menu-footer">
+      <div class="save-state" id="saveState" role="status" aria-live="polite"><span class="dot"></span><span id="saveText">Alles gespeichert</span></div>
+      <div class="actions">
+        <button class="button button-secondary" type="button" id="discardBtn" disabled>Verwerfen</button>
+        <button class="button button-primary" type="button" id="saveBtn" disabled>Speichern</button>
+      </div>
+    </footer>
+  </div>
+</dialog>
+
+<!-- Vorschau-Werkzeug -->
+<button class="pv-toggle" id="pvToggle" type="button" aria-expanded="false" aria-controls="pvPanel"><span>Vorschau</span><b id="pvCount">12</b></button>
+<div class="pv-panel" id="pvPanel" hidden>
+  <h2>Verbesserte Version · Vorschau</h2>
+  <p>Beispieldaten und ein gezeichnetes Platzhalterbild. Im Betrieb läuft dahinter der YouTube-Livestream. Das Menü öffnest du über den Knopf oben links oder mit Strg+Alt+S.</p>
+  <h3>Szenario</h3>
+  <div class="pv-chips" id="pvScenario">
+    <button type="button" data-scn="normal" aria-pressed="true">Normalbetrieb</button>
+    <button type="button" data-scn="errors" aria-pressed="false">Störungen</button>
+    <button type="button" data-scn="warning" aria-pressed="false">Unwetterwarnung</button>
+    <button type="button" data-scn="empty" aria-pressed="false">Kein Livestream</button>
+  </div>
+  <h3>Theme</h3>
+  <div class="pv-chips" id="pvTheme"></div>
+  <label class="pv-switch" for="pvMarkers"><span>Verbesserungen im Bild markieren</span><input type="checkbox" id="pvMarkers" checked></label>
+  <h3>Im Kiosk</h3>
+  <ol class="pv-list" id="pvList"></ol>
+  <h3>Im Menü</h3>
+  <ul class="pv-list is-plain">
+    <li><span>Sechs statt sieben Bereiche: „Musik“ und „Abspielen“ sind zusammengelegt, jeder Reiter hat ein Symbol. Auf schmalen Bildschirmen bleibt nur das Symbol.</span></li>
+    <li><span>„Läuft gerade“ zeigt Titel, Kanal und Vorschaubild statt der Embed-Adresse.</span></li>
+    <li><span>Theme als Vorschaukacheln, Layout als Segmentschalter, Blöcke als Schalter statt Kästchen.</span></li>
+    <li><span>Speichern und Verwerfen sind nur aktiv, wenn sich etwas geändert hat; der Fuß zählt die offenen Änderungen. Sofort wirksame Aktionen sind als solche beschriftet.</span></li>
+    <li><span>System zeigt eine Diagnose mit Zustand und letzter Antwort je Datenquelle.</span></li>
+    <li><span>Linienfilter als antippbare Chips statt Freitext.</span></li>
+  </ul>
+</div>
+<div class="mk-layer" id="mkLayer" aria-hidden="true"></div>
+<div class="mk-pop" id="mkPop" hidden></div>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const TZ = "Europe/Berlin";
+const menu = document.getElementById("menu");
+const T0 = Date.now();
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("storchcam-preview:" + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
+  set(k, v) { try { localStorage.setItem("storchcam-preview:" + k, JSON.stringify(v)); } catch (_) {} },
+};
+
+const saved = { theme: store.get("theme", "dark"), sky: "auto", layout: "auto", blocks: { clock: true, weather: true, transit: true, system: true } };
+let working = JSON.parse(JSON.stringify(saved));
+let scenario = store.get("scenario", "normal");
+let markersOn = store.get("markers", true);
+let currentStream = { id: "kirchzarten", title: "Live Storchennest Kirchzarten", channel: "regiowebcam", since: "seit 3 Std. live", seed: 7 };
+
+const THEMES = [
+  { id: "dark", name: "Dunkel" }, { id: "light", name: "Hell" }, { id: "high-contrast", name: "Hoher Kontrast" },
+  { id: "y2k", name: "Y2K" }, { id: "comic", name: "Comic" },
+];
+
+/* ---------- Format ---------- */
+const fmtTime = (d) => new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: TZ }).format(d);
+const fmtDate = (d, short) => new Intl.DateTimeFormat("de-DE", { weekday: short ? "short" : "long", day: "numeric", month: "long", timeZone: TZ }).format(d);
+const HOUR_FMT = new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: TZ });
+const hourOf = (d) => Number(HOUR_FMT.formatToParts(d).find((x) => x.type === "hour")?.value);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+
+/* ---------- Wetter (Symbole aus dem Original) ---------- */
+const CLOUD = "M7 18.5h10.5a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.4 11.1 3.7 3.7 0 0 0 7 18.5z";
+const ICONS = {
+  cloudy: `<path class="wi-cloud" d="${CLOUD}"/>`,
+  rain: `<path class="wi-cloud" transform="translate(0 -4)" d="${CLOUD}"/><path class="wi-drop" d="M8.5 17.5l-1 3M12.5 17.5l-1 3M16.5 17.5l-1 3"/>`,
+};
+function weatherData() {
+  const base = { temp: 9, feels: 6, wind: 21, hum: 87, cond: "Bedeckt", icon: "cloudy", probs: [20, 35, 55, 70, 60, 30, 15, 10], stale: false };
+  if (scenario === "warning") return { ...base, temp: 11, feels: 5, wind: 48, cond: "Stürmisch, Schauer", icon: "rain", probs: [65, 80, 75, 50, 40, 25, 20, 10] };
+  if (scenario === "errors") return { ...base, stale: true };
+  return base;
+}
+const THRESHOLD = 45;
+function renderWeather() {
+  const w = weatherData();
+  const small = document.body.dataset.layout === "minimal" || innerWidth < 760;
+  $("#weatherIcon").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[w.icon]}</svg>`;
+  $("#weatherTemp").textContent = `${w.temp}°`;
+  $("#weatherCond").textContent = w.cond;
+  $("#weatherDetails").textContent = small
+    ? `gefühlt ${w.feels}° · ${w.wind} km/h`
+    : `gefühlt ${w.feels}° · Wind ${w.wind} km/h · Luftfeuchte ${w.hum} %`;
+  const now = new Date();
+  const count = small ? 6 : 8;
+  const hours = w.probs.slice(0, count).map((p, i) => ({ p, at: new Date(now.getTime() + i * 3600e3) }));
+  const peak = hours.reduce((a, b) => (b.p > a.p ? b : a));
+  const firstWet = hours.find((h) => h.p >= THRESHOLD);
+  $("#rainLabel").textContent = small ? "Regen" : "Regenwahrscheinlichkeit";
+  const sum = $("#rainSummary");
+  sum.classList.toggle("is-stale", w.stale);
+  if (w.stale) sum.textContent = `Stand ${fmtTime(new Date(T0 - 14 * 60e3))} · keine Verbindung`;
+  else if (firstWet === hours[0]) sum.textContent = `Regen jetzt · ${hours[0].p} %`;
+  else if (firstWet) sum.textContent = `${small ? "" : "Regen "}ab ${hourOf(firstWet.at)} Uhr · ${firstWet.p} %`;
+  else sum.textContent = `Kein Regen in den nächsten ${count} Stunden`;
+  const tracks = $("#rainTracks"); const labels = $("#rainHours");
+  tracks.replaceChildren(); labels.replaceChildren();
+  hours.forEach((h, i) => {
+    const track = el("span", "rain-track");
+    const bar = el("span", "rain-bar" + (h.p >= THRESHOLD ? " is-wet" : ""));
+    bar.style.height = `${h.p}%`;
+    track.append(bar);
+    if (h === peak && h.p >= 20) {
+      const lab = el("span", "rain-peak", `${h.p}`);
+      if (h.p >= 55) { lab.classList.add("inside"); lab.style.top = `${100 - h.p + 6}%`; }
+      else lab.style.bottom = `calc(${h.p}% + 3px)`;
+      track.append(lab);
+    }
+    tracks.append(track);
+    labels.append(el("span", i === 0 ? "is-now" : "", i === 0 ? "jetzt" : String(hourOf(h.at))));
+  });
+  const line = el("span", "rain-threshold"); line.style.bottom = `${THRESHOLD}%`; line.title = `Regenschwelle ${THRESHOLD} %`;
+  tracks.append(line);
+}
+
+/* ---------- Abfahrten ---------- */
+const DEPS_NORMAL = [
+  { line: "31", target: "Nordpark", stop: "Hauptstraße", min: 3.3, delay: 2 },
+  { line: "26", target: "Marktplatz", stop: "Rathaus", min: 7.2, delay: 0 },
+  { line: "31", target: "Universität", stop: "Hauptstraße", min: 11.4, delay: 0 },
+  { line: "26", target: "Marktplatz", stop: "Rathaus", min: 22.2, delay: 1 },
+  { line: "31", target: "Nordpark", stop: "Hauptstraße", min: 33.3, delay: 0 },
+  { line: "N2", target: "Westpark", stop: "Hauptstraße", min: 66.5, delay: 0 },
+].map((d) => ({ ...d, at: T0 + d.min * 60e3 }));
+const DEPS_ERRORS = [
+  { line: "31", target: "Nordpark", stop: "Hauptstraße", min: 0.4, delay: 6 },
+  { line: "N2", target: "Westpark", stop: "Hauptstraße", min: 66.5, delay: 0 },
+  { line: "31", target: "Universität", stop: "Hauptstraße", min: 71, delay: 0 },
+].map((d) => ({ ...d, at: T0 + d.min * 60e3 }));
+
+function depRow(d, showStop, now) {
+  const row = el("div", "departure");
+  const badge = el("span", "line-badge" + (/^N/i.test(d.line) ? " is-night" : ""), d.line);
+  const main = el("span", "dep-main");
+  main.append(el("span", "dep-target", d.target));
+  if (showStop) main.append(el("span", "dep-sub", `ab ${d.stop}`));
+  const time = el("span", "dep-time");
+  if (d.delay > 0) {
+    const pill = el("span", "delay" + (d.delay >= 5 ? " is-big" : ""), `+${d.delay}`);
+    pill.title = `${d.delay} Minuten später als geplant`;
+    pill.dataset.mk = "4";
+    time.append(pill);
+  }
+  const mins = Math.max(0, Math.round((d.at - now) / 60e3));
+  if (mins <= 0) time.append(el("span", "dep-now", "jetzt"));
+  else if (mins < 60) time.append(el("span", "dep-num", String(mins)), el("span", "dep-unit", "min"));
+  else { const c = el("span", "dep-clock", fmtTime(new Date(d.at))); c.dataset.mk = "5"; time.append(c); }
+  row.append(badge, main, time);
+  return row;
+}
+function errorRow() {
+  const row = el("div", "departure is-error");
+  row.dataset.mk = "6";
+  const icon = el("span", "dep-icon");
+  icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v6.2M12 16.8h.01"/></svg>';
+  const main = el("span", "dep-main");
+  main.append(el("span", "dep-error", "Rathaus · keine Daten"), el("span", "dep-sub", `Stand ${fmtTime(new Date(T0 - 3 * 60e3))} · neuer Versuch läuft`));
+  row.append(icon, main);
+  return row;
+}
+function renderBoards() {
+  const now = Date.now();
+  const max = innerWidth < 760 && document.body.dataset.layout !== "portrait" ? 2 : 3;
+  const src = scenario === "errors" ? DEPS_ERRORS : DEPS_NORMAL;
+  const rows = src.filter((d) => d.at > now - 40e3).slice(0, max);
+  const stops = [...new Set(rows.map((r) => r.stop))];
+  const items = [];
+  if (scenario === "errors") items.push(errorRow());
+  rows.forEach((r) => items.push(depRow(r, stops.length > 1 && scenario !== "errors", now)));
+  $("#transitStation").textContent = stops.length === 1 || scenario === "errors" ? `ab ${rows[0]?.stop || ""}` : "";
+  $("#boards").replaceChildren(...items.slice(0, max));
+}
+
+/* ---------- Uhr & Systemzeile ---------- */
+function renderClock() {
+  const now = new Date();
+  $("#clock").textContent = fmtTime(now);
+  $("#date").textContent = fmtDate(now, document.body.dataset.layout === "minimal");
+  const dot = $("#sysDot");
+  dot.className = "dot" + (scenario === "errors" ? " is-warn" : "");
+  $("#sysText").textContent = scenario === "errors" ? "Abfahrten gestört · RAM 42 %" : "RAM 42 % · 51 °C";
+}
+
+/* ---------- Songkarte ---------- */
+const SONG = { dur: 185, start: 100 };
+function renderMusic() {
+  const pos = Math.min(SONG.dur, SONG.start + (Date.now() - T0) / 1000) % SONG.dur;
+  const pct = (pos / SONG.dur) * 100;
+  $("#npBar").style.width = pct + "%";
+  $("#npLine").style.width = pct + "%";
+  const f = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  $("#npTime").textContent = `${f(pos)} / ${f(SONG.dur)}`;
+}
+let npTimer = null;
+$("#npOpen").addEventListener("click", () => {
+  const card = $("#nowPlaying");
+  const open = !card.classList.contains("is-open");
+  card.classList.toggle("is-open", open);
+  $("#npOpen").setAttribute("aria-expanded", String(open));
+  clearTimeout(npTimer);
+  if (open) npTimer = setTimeout(() => { card.classList.remove("is-open"); $("#npOpen").setAttribute("aria-expanded", "false"); }, 20000);
+  placeMarkers();
+});
+
+/* ---------- Stream-Chip & Menü-Knopf ---------- */
+let chipTimer = null;
+function showChip() {
+  const chip = $("#streamChip");
+  if (scenario === "empty") { chip.classList.add("is-gone"); return; }
+  $("#chipTitle").textContent = currentStream.title;
+  $("#chipChannel").textContent = `${currentStream.channel} · ${currentStream.since}`;
+  chip.classList.remove("is-gone");
+  clearTimeout(chipTimer);
+  chipTimer = setTimeout(() => { chip.classList.add("is-gone"); setTimeout(placeMarkers, 600); }, markersOn ? 15000 : 6000);
+  placeMarkers();
+}
+let idleTimer = null;
+function wake() {
+  $("#menuBtn").classList.remove("is-idle");
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => $("#menuBtn").classList.add("is-idle"), 8000);
+}
+["pointermove", "pointerdown", "keydown", "touchstart"].forEach((ev) => addEventListener(ev, wake, { passive: true }));
+
+/* ---------- Layout ---------- */
+function resolveLayout() {
+  const req = working.layout;
+  if (innerHeight > innerWidth * 1.05 || innerWidth < 640) return "portrait";
+  if (req !== "auto") return req;
+  if (innerWidth < 1150 || innerHeight < 650) return "minimal";
+  if (innerWidth >= 1700 && innerHeight >= 850) return "information";
+  return "standard";
+}
+function applyBlocks() {
+  const b = working.blocks;
+  $("#clockBlock").hidden = !(b.clock || b.system);
+  $(".clock-time").hidden = !b.clock; $("#date").hidden = !b.clock;
+  $("#sys").hidden = !b.system;
+  $("#weatherBlock").hidden = !b.weather;
+  $("#transitBlock").hidden = !b.transit;
+  const seps = $$(".ib-sep");
+  seps[0].hidden = $("#clockBlock").hidden || ($("#weatherBlock").hidden && $("#transitBlock").hidden);
+  seps[1].hidden = $("#transitBlock").hidden || ($("#weatherBlock").hidden && $("#clockBlock").hidden);
+  if (document.body.dataset.layout !== "portrait") {
+    const cols = [];
+    if (!$("#clockBlock").hidden) cols.push("minmax(var(--col-clock), max-content)");
+    if (!seps[0].hidden) cols.push("1px");
+    if (!$("#weatherBlock").hidden) cols.push("minmax(0, 1fr)");
+    if (!seps[1].hidden) cols.push("1px");
+    if (!$("#transitBlock").hidden) cols.push(b.weather ? "var(--col-transit)" : "minmax(var(--col-transit), 1fr)");
+    $("#infobar").style.gridTemplateColumns = cols.join(" ");
+  } else $("#infobar").style.gridTemplateColumns = "";
+  $("#infobar").hidden = !(b.clock || b.system || b.weather || b.transit);
+}
+
+/* ---------- Theme, Himmel ---------- */
+function isDay() { const h = hourOf(new Date()); return h >= 7 && h < 17; }
+function applyTheme() {
+  document.body.dataset.theme = working.theme;
+  document.body.dataset.sky = working.sky === "auto" ? (isDay() ? "day" : "night") : working.sky;
+  $$("#pvTheme button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.theme === working.theme)));
+  $$("#themeGrid .theme-card").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.theme === working.theme)));
+}
+
+/* ---------- Szenario ---------- */
+function applyScenario() {
+  $$("#pvScenario button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.scn === scenario)));
+  const empty = scenario === "empty";
+  $("#streamEmpty").hidden = !empty;
+  $("#scene").style.visibility = empty ? "hidden" : "visible";
+  $("#warning").hidden = scenario !== "warning";
+  $("#rtHint").hidden = scenario === "errors";
+  $("#rathausPill").innerHTML = scenario === "errors" ? '<span class="dot is-bad"></span>Keine Antwort' : '<span class="dot"></span>Echtzeit';
+  if (empty) $("#streamChip").classList.add("is-gone"); else showChip();
+  renderAll();
+  renderDiag();
+}
+
+/* ---------- Gesamtdarstellung ---------- */
+function renderAll() {
+  const layout = resolveLayout();
+  document.body.dataset.layout = layout;
+  applyBlocks();
+  renderClock();
+  renderWeather();
+  renderBoards();
+  renderMusic();
+  requestAnimationFrame(() => {
+    document.body.style.setProperty("--dock-h", $("#dock").offsetHeight + "px");
+    placeMarkers();
+  });
+}
+
+/* ---------- Markierungen ---------- */
+const MARKS = [
+  { n: 1, t: "Regenbalken lesbar", d: "Stunden über der Regenschwelle sind blau, die Schwelle ist gestrichelt, der Spitzenwert steht als Zahl im Balken, die laufende Stunde heißt „jetzt“." },
+  { n: 2, t: "Werte beschriftet", d: "„Luftfeuchte 87 %“ statt einer nackten Prozentzahl, die man mit der Regenwahrscheinlichkeit verwechselt." },
+  { n: 3, t: "Statuszeile ohne Platzhalter", d: "Fehlende Werte werden weggelassen statt „CPU – · – °C“. Der Punkt zeigt auf einen Blick, ob alle Datenquellen aktuell sind." },
+  { n: 4, t: "Verspätung in Echtzeit", d: "„+2“ neben der Minutenangabe. Braucht die offizielle VRR-EFA-Schnittstelle (departureTimeEstimated), die der Haltestellenmonitor nicht liefert." },
+  { n: 5, t: "Ab 60 Minuten als Uhrzeit", d: "„21:59“ statt „1h 05“. Nachtlinien bekommen eine eigene Farbe. (Szenario Störungen)" },
+  { n: 6, t: "Kurze Fehlerzeile", d: "„Rathaus · keine Daten“ mit Datenstand passt in die Spalte, statt abgeschnitten zu werden. (Szenario Störungen)" },
+  { n: 7, t: "Stream-Titel kurz einblenden", d: "Nach dem Start oder einem Wechsel erscheinen 6 Sekunden lang LIVE, Titel und Kanal, danach ist das Bild wieder frei. Tippe hier, um es zu wiederholen." },
+  { n: 8, t: "Menü-Knopf tritt zurück", d: "Nach 30 Sekunden ohne Berührung wird der Knopf dezent (hier schon nach 8 Sekunden) und kommt bei jeder Berührung zurück." },
+  { n: 9, t: "Songkarte mit Fortschritt", d: "Auch in der kleinen Form läuft eine dünne Fortschrittslinie, und die Quelle steht dabei." },
+  { n: 10, t: "Amtliche Unwetterwarnung", d: "Erscheint nur bei aktiver DWD-Warnung für den Ort, zum Beispiel über die freie Bright-Sky-API. (Szenario Unwetterwarnung)" },
+  { n: 11, t: "Hochkant-Layout", d: "Für das DSI-Display im Hochformat und schmale Bildschirme stapelt sich die Leiste in zwei Reihen. Die Konfiguration kennt das Hochformat schon, die Oberfläche bisher nicht." },
+  { n: 12, t: "Leerer Zustand mit Ziel", d: "„Livestream auswählen“ öffnet direkt die Live-Suche. Vorher stand dort „Jetzt neu laden“, was ohne Stream nichts bewirkt. (Szenario Kein Livestream)" },
+];
+function placeMarkers() {
+  const layer = $("#mkLayer");
+  layer.replaceChildren();
+  if (!markersOn || menu.open) return;
+  const seen = new Set();
+  $$("[data-mk]").forEach((t) => {
+    const n = Number(t.dataset.mk);
+    if (seen.has(n)) return;
+    const r = t.getBoundingClientRect();
+    if (!r.width || !r.height || t.classList.contains("is-gone")) return;
+    let vis = t, hidden = false;
+    while (vis && vis !== document.body) { const cs = getComputedStyle(vis); if (cs.visibility === "hidden" || Number(cs.opacity) < 0.2 || vis.hidden) { hidden = true; break; } vis = vis.parentElement; }
+    if (hidden) return;
+    seen.add(n);
+    const m = el("button", "mk", String(n));
+    m.type = "button";
+    m.dataset.n = String(n);
+    m.setAttribute("aria-label", `Verbesserung ${n}`);
+    const mid = r.top + r.height / 2 - 12;
+    const spots = { 1: [r.left - 27, mid + 8], 2: [r.right - 12, r.top - 18], 3: [r.left - 27, mid], 4: [r.left - 28, mid], 5: [r.left - 28, mid],
+      6: [r.right - 14, r.top - 2], 11: [r.left - 8, r.top - 12], 12: [r.right - 14, r.top - 10] };
+    let [x, y] = spots[n] || [r.right - 10, r.top - 10];
+    x = Math.max(6, Math.min(innerWidth - 30, x)); y = Math.max(6, Math.min(innerHeight - 30, y));
+    m.style.left = x + "px"; m.style.top = y + "px";
+    m.addEventListener("click", (e) => { e.stopPropagation(); showPop(n, m); });
+    m.addEventListener("mouseenter", () => hot(n, true));
+    m.addEventListener("mouseleave", () => hot(n, false));
+    layer.append(m);
+  });
+}
+function hot(n, on) {
+  $$(`[data-mk="${n}"]`).forEach((t) => t.classList.toggle("mk-target", on));
+  $$(`.mk[data-n="${n}"]`).forEach((m) => m.classList.toggle("is-hot", on));
+  $$(`#pvList li[data-n="${n}"]`).forEach((li) => li.classList.toggle("is-hot", on));
+}
+function showPop(n, anchor) {
+  const m = MARKS.find((x) => x.n === n);
+  const pop = $("#mkPop");
+  pop.innerHTML = "";
+  pop.append(el("strong", "", `${n} · ${m.t}`), el("span", "", m.d));
+  pop.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let x = r.left + r.width / 2 - w / 2, y = r.bottom + 8;
+  if (y + h > innerHeight - 8) y = r.top - h - 8;
+  pop.style.left = Math.max(12, Math.min(innerWidth - w - 12, x)) + "px";
+  pop.style.top = Math.max(12, y) + "px";
+  if (n === 7) showChip();
+}
+document.addEventListener("click", (e) => { if (!e.target.closest(".mk, .mk-pop")) $("#mkPop").hidden = true; });
+
+/* ---------- Vorschau-Panel ---------- */
+function buildPanel() {
+  $("#pvTheme").replaceChildren(...THEMES.map((t) => { const b = el("button", "", t.name); b.type = "button"; b.dataset.theme = t.id; b.setAttribute("aria-pressed", "false"); return b; }));
+  $("#pvList").replaceChildren(...MARKS.map((m) => {
+    const li = el("li"); li.dataset.n = String(m.n);
+    const txt = el("span"); txt.append(el("strong", "", m.t), document.createTextNode(" "), el("i", "", m.d));
+    li.append(el("b", "", String(m.n)), txt);
+    li.addEventListener("mouseenter", () => hot(m.n, true));
+    li.addEventListener("mouseleave", () => hot(m.n, false));
+    li.addEventListener("click", () => { if (m.n === 7) showChip(); if (m.n === 5 || m.n === 6) setScenario("errors"); if (m.n === 10) setScenario("warning"); if (m.n === 12) setScenario("empty"); });
+    return li;
+  }));
+  $("#pvCount").textContent = String(MARKS.length);
+}
+$("#pvToggle").addEventListener("click", () => {
+  const p = $("#pvPanel"); p.hidden = !p.hidden;
+  $("#pvToggle").setAttribute("aria-expanded", String(!p.hidden));
+});
+$("#pvScenario").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setScenario(b.dataset.scn); });
+function setScenario(s) { scenario = s; store.set("scenario", s); applyScenario(); }
+$("#pvTheme").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  working.theme = b.dataset.theme; saved.theme = b.dataset.theme; store.set("theme", b.dataset.theme);
+  applyTheme(); refreshDirty(); placeMarkers();
+});
+$("#pvMarkers").addEventListener("change", (e) => { markersOn = e.target.checked; store.set("markers", markersOn); placeMarkers(); });
+
+/* ---------- Menü ---------- */
+function openMenu(tab) {
+  working = JSON.parse(JSON.stringify(saved));
+  syncMenuControls();
+  showTab(tab || "live");
+  $("#mkPop").hidden = true;
+  if (!menu.open) menu.showModal();
+  placeMarkers();
+  refreshDirty();
+}
+function closeMenu() {
+  if (dirtyCount() > 0) { working = JSON.parse(JSON.stringify(saved)); applyTheme(); renderAll(); toast("Ungespeicherte Änderungen verworfen"); }
+  menu.close();
+}
+function showTab(name) {
+  $$(".menu-tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+  $$(".menu-panel[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== name; });
+  $("#menuForm").scrollTop = 0;
+}
+$$(".menu-tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+$("#menuBtn").addEventListener("click", () => openMenu("live"));
+$("#emptyPick").addEventListener("click", () => openMenu("live"));
+$("#menuClose").addEventListener("click", closeMenu);
+menu.addEventListener("cancel", (e) => { e.preventDefault(); closeMenu(); });
+menu.addEventListener("close", () => renderAll());
+addEventListener("keydown", (e) => { if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "s") { e.preventDefault(); openMenu("live"); } });
+
+function dirtyCount() {
+  let n = 0;
+  if (working.theme !== saved.theme) n++;
+  if (working.sky !== saved.sky) n++;
+  if (working.layout !== saved.layout) n++;
+  Object.keys(working.blocks).forEach((k) => { if (working.blocks[k] !== saved.blocks[k]) n++; });
+  return n;
+}
+function refreshDirty() {
+  const n = dirtyCount();
+  $("#saveState").classList.toggle("is-dirty", n > 0);
+  $("#saveText").textContent = n === 0 ? "Alles gespeichert" : n === 1 ? "1 ungespeicherte Änderung" : `${n} ungespeicherte Änderungen`;
+  $("#saveBtn").disabled = n === 0; $("#discardBtn").disabled = n === 0;
+}
+$("#saveBtn").addEventListener("click", () => {
+  Object.assign(saved, JSON.parse(JSON.stringify(working))); store.set("theme", saved.theme);
+  refreshDirty(); toast("Gespeichert");
+});
+$("#discardBtn").addEventListener("click", () => {
+  working = JSON.parse(JSON.stringify(saved)); syncMenuControls(); applyTheme(); renderAll(); refreshDirty(); toast("Änderungen verworfen");
+});
+function syncMenuControls() {
+  $$("#layoutSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.layout === working.layout)));
+  $("#skySel").value = working.sky;
+  $$("[data-block]").forEach((c) => { c.checked = working.blocks[c.dataset.block]; });
+  applyTheme();
+}
+function buildThemeGrid() {
+  $("#themeGrid").replaceChildren(...THEMES.map((t) => {
+    const b = el("button", "theme-card"); b.type = "button"; b.dataset.theme = t.id; b.setAttribute("aria-pressed", "false");
+    const mini = el("span", "mini"); mini.dataset.preview = t.id;
+    const bar = el("span", "mini-bar"); bar.append(el("span", "", "20:54"), el("i"), el("b", "", "31"));
+    mini.append(bar);
+    b.append(mini, el("strong", "", t.name));
+    b.addEventListener("click", () => { working.theme = t.id; applyTheme(); refreshDirty(); });
+    return b;
+  }));
+}
+$("#layoutSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; working.layout = b.dataset.layout; syncMenuControls(); renderAll(); refreshDirty(); });
+$("#skySel").addEventListener("change", (e) => { working.sky = e.target.value; applyTheme(); refreshDirty(); });
+$$("[data-block]").forEach((c) => c.addEventListener("change", () => { working.blocks[c.dataset.block] = c.checked; renderAll(); refreshDirty(); }));
+$$("[data-chips]").forEach((g) => g.addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c) c.setAttribute("aria-pressed", String(c.getAttribute("aria-pressed") !== "true")); }));
+$("#musicSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  $$("#musicSeg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  $$("[data-subpanel]").forEach((p) => { p.hidden = p.dataset.subpanel !== b.dataset.sub; });
+});
+$("#menuForm").addEventListener("submit", (e) => e.preventDefault());
+
+const STREAMS = [
+  { id: "kirchzarten", title: "Live Storchennest Kirchzarten", channel: "regiowebcam", since: "seit 3 Std. live", seed: 7 },
+  { id: "leutershausen", title: "Live aus dem Storchennest in Leutershausen", channel: "Heimatverein Leutershausen", since: "seit 26 Min. live", seed: 21 },
+  { id: "rathaus", title: "Storchenhorst auf dem Rathausdach", channel: "Beispielkanal", since: "seit 5 Std. live", seed: 42 },
+];
+function buildLiveResults() {
+  $("#liveResults").replaceChildren(...STREAMS.map((s) => {
+    const b = el("button", "live-card" + (s.id === currentStream.id ? " is-current" : "")); b.type = "button";
+    const c = el("canvas"); c.width = 320; c.height = 180;
+    b.append(c, el("span", "live-pill", "LIVE"));
+    if (s.id === currentStream.id) b.append(el("span", "now-badge", "Läuft"));
+    b.append(el("strong", "", s.title), el("span", "", `${s.channel} · ${s.since}`));
+    drawScene(c, { seed: s.seed, mode: "day", t: 0 });
+    b.addEventListener("click", () => {
+      currentStream = s; if (scenario === "empty") setScenario("normal");
+      sceneSeed = s.seed; buildStatic(); buildLiveResults(); syncLiveNow(); showChip(); toast("Livestream gewechselt");
+    });
+    return b;
+  }));
+}
+function syncLiveNow() {
+  $("#liveNowTitle").textContent = currentStream.title;
+  $("#liveNowChannel").textContent = `${currentStream.channel} · ${currentStream.since}`;
+  drawScene($("#nowThumb"), { seed: currentStream.seed, mode: "dusk", t: 0 });
+}
+function buildPlaces() {
+  const places = [["Nordpark, Musterstadt", "Nordrhein-Westfalen, Deutschland · Europe/Berlin"], ["Nordpark, Bahnhof", "Musterstadt · Haltepunkt"], ["Nordparkr Straße, Musterstadt", "Straße · Europe/Berlin"]];
+  $("#placeResults").replaceChildren(...places.map(([a, b]) => {
+    const r = el("button", "row-card"); r.type = "button";
+    const d = el("div"); d.append(el("strong", "", a), el("span", "", b)); r.append(d);
+    r.addEventListener("click", () => { $("#placeNow").textContent = a; toast(`Ort übernommen: ${a}`); });
+    return r;
+  }));
+}
+function renderDiag() {
+  const err = scenario === "errors";
+  const rows = [
+    ["Wetter · Open-Meteo", err ? ["warn", "Veraltet"] : ["ok", "Aktuell"], err ? "vor 14 Min. · nächster Versuch läuft" : "vor 2 Min."],
+    ["Abfahrten · VRR", err ? ["bad", "1 von 2 gestört"] : ["ok", "Aktuell"], err ? "Rathaus: Zeitüberschreitung" : "vor 18 Sek."],
+    ["Warnungen · DWD", scenario === "warning" ? ["warn", "1 Warnung aktiv"] : ["ok", "Keine Warnung"], "vor 4 Min."],
+    ["Livestream", scenario === "empty" ? ["warn", "Nicht gewählt"] : ["ok", "Eingebettet"], scenario === "empty" ? "–" : currentStream.channel],
+    ["Musik · YouTube Music", ["ok", "Spielt auf dem Pi"], "vor 3 Sek."],
+  ];
+  $("#diag tbody").replaceChildren(...rows.map(([a, [k, s], c]) => {
+    const tr = el("tr"); tr.append(el("td", "", a), el("td", k, `● ${s}`), el("td", "", c)); return tr;
+  }));
+}
+
+let toastTimer = null;
+function toast(text) {
+  const t = $("#toast"); t.textContent = text; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2800);
+}
+
+/* ---------- Platzhalter-Livebild (Canvas) ---------- */
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const PAL = {
+  dusk: { sky: ["#16213a", "#30466a", "#a8786a", "#d79a6e"], glow: "rgba(255, 190, 140, 0.55)", far: "#2a3446", near: "#121a24", cloud: "rgba(240, 196, 176, 0.22)", wood: "#2b231d" },
+  day: { sky: ["#3f7fc4", "#78b2e2", "#bfe0f5", "#e6f3fb"], glow: "rgba(255, 250, 220, 0.6)", far: "#6f8d84", near: "#2f4a32", cloud: "rgba(255, 255, 255, 0.75)", wood: "#5a4636" },
+};
+function geometry(w, h) {
+  const portrait = h > w * 1.05;
+  const W = Math.min(w, h) * (portrait ? 0.62 : 0.44);
+  return { portrait, W, nx: w * (portrait ? 0.5 : 0.4), ny: h * (portrait ? 0.42 : 0.52) };
+}
+function drawSky(ctx, w, h, p) {
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, p.sky[0]); g.addColorStop(0.45, p.sky[1]); g.addColorStop(0.78, p.sky[2]); g.addColorStop(1, p.sky[3]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  const r = ctx.createRadialGradient(w * 0.78, h * 0.76, 0, w * 0.78, h * 0.76, Math.max(w, h) * 0.45);
+  r.addColorStop(0, p.glow); r.addColorStop(1, "rgba(255, 190, 140, 0)");
+  ctx.fillStyle = r; ctx.fillRect(0, 0, w, h);
+}
+function drawLand(ctx, w, h, p, rand) {
+  [[0.7, p.far, 0.035], [0.77, p.near, 0.05]].forEach(([base, color, amp]) => {
+    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0, h);
+    for (let x = 0; x <= w + 20; x += 14) {
+      const y = h * base - Math.abs(Math.sin(x * 0.011 + rand() * 0.6)) * h * amp - rand() * h * amp * 0.8;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+  });
+}
+function drawPole(ctx, w, h, p, G) {
+  const pw = G.W * 0.075;
+  const g = ctx.createLinearGradient(G.nx - pw / 2, 0, G.nx + pw / 2, 0);
+  g.addColorStop(0, p.wood); g.addColorStop(0.5, "#4a3b2f"); g.addColorStop(1, p.wood);
+  ctx.fillStyle = g; ctx.fillRect(G.nx - pw / 2, G.ny, pw, h - G.ny);
+  ctx.fillStyle = p.wood; ctx.fillRect(G.nx - G.W * 0.42, G.ny + G.W * 0.06, G.W * 0.84, G.W * 0.035);
+}
+function twigs(ctx, G, rand, front) {
+  const cols = ["#5b4632", "#6e5539", "#4a3826", "#7d6444", "#3c2e20", "#8a7150"];
+  for (let i = 0; i < 380; i++) {
+    const a = rand() * Math.PI * 2;
+    const rr = 0.55 + rand() * 0.45;
+    const x = G.nx + Math.cos(a) * G.W * 0.5 * rr;
+    const y = G.ny + Math.sin(a) * G.W * 0.12 * rr + (rand() - 0.3) * G.W * 0.06;
+    const isFront = Math.sin(a) > 0.1;
+    if (isFront !== front) continue;
+    const len = G.W * (0.08 + rand() * 0.16);
+    const ang = (rand() - 0.5) * 0.9;
+    ctx.strokeStyle = cols[(rand() * cols.length) | 0];
+    ctx.lineWidth = Math.max(1, G.W * (0.006 + rand() * 0.008));
+    ctx.beginPath(); ctx.moveTo(x - Math.cos(ang) * len / 2, y - Math.sin(ang) * len / 2); ctx.lineTo(x + Math.cos(ang) * len / 2, y + Math.sin(ang) * len / 2); ctx.stroke();
+  }
+}
+function drawStork(ctx, G, t, sitting) {
+  const k = G.W / 120;
+  ctx.save();
+  if (sitting) {
+    ctx.translate(G.nx - G.W * 0.18, G.ny - G.W * 0.02); ctx.scale(-k, k);
+    ctx.fillStyle = "#ecebe4"; ctx.beginPath(); ctx.ellipse(0, -10, 24, 12, -0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#151515"; ctx.beginPath(); ctx.moveTo(-6, -12); ctx.lineTo(-30, -4); ctx.lineTo(-22, -16); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#ecebe4"; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(14, -16); ctx.quadraticCurveTo(20, -26, 18, -34); ctx.stroke();
+    ctx.fillStyle = "#ecebe4"; ctx.beginPath(); ctx.arc(19, -36, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#d9542e"; ctx.beginPath(); ctx.moveTo(23, -38); ctx.lineTo(24, -33); ctx.lineTo(44, -26); ctx.closePath(); ctx.fill();
+    ctx.restore(); return;
+  }
+  ctx.translate(G.nx + G.W * 0.08, G.ny - G.W * 0.01); ctx.scale(k, k);
+  ctx.strokeStyle = "#cf4a2c"; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.moveTo(-3, -34); ctx.lineTo(-6, 0); ctx.moveTo(5, -34); ctx.lineTo(7, 0); ctx.stroke();
+  ctx.fillStyle = "#f1f0ea"; ctx.beginPath(); ctx.ellipse(0, -48, 27, 15, -0.22, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#141414"; ctx.beginPath(); ctx.moveTo(-6, -44); ctx.lineTo(-42, -31); ctx.lineTo(-33, -46); ctx.lineTo(-10, -56); ctx.closePath(); ctx.fill();
+  const bob = Math.sin(t / 1400) * 0.07;
+  ctx.save(); ctx.translate(16, -56); ctx.rotate(bob);
+  ctx.strokeStyle = "#f1f0ea"; ctx.lineWidth = 9; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(7, -18, 7, -36); ctx.stroke();
+  ctx.fillStyle = "#f1f0ea"; ctx.beginPath(); ctx.arc(8, -39, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#e0572f"; ctx.beginPath(); ctx.moveTo(13, -42); ctx.lineTo(14, -35); ctx.lineTo(42, -30); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.arc(10, -40.5, 1.3, 0, Math.PI * 2); ctx.fill();
+  ctx.restore(); ctx.restore();
+}
+function cloudShapes(ctx, w, h, p, seed, count) {
+  const rand = rng(seed + 99);
+  ctx.fillStyle = p.cloud;
+  for (let i = 0; i < count; i++) {
+    const x = rand() * w, y = h * (0.07 + rand() * 0.36), s = Math.min(w, h) * (0.05 + rand() * 0.08);
+    ctx.beginPath();
+    const puffs = 3 + ((rand() * 3) | 0);
+    for (let j = 0; j < puffs; j++) {
+      const px = x + j * s * 0.8, py = y - Math.sin((j / (puffs - 1 || 1)) * Math.PI) * s * 0.35, r = s * (0.55 + rand() * 0.35);
+      ctx.moveTo(px + r, py); ctx.arc(px, py, r, 0, Math.PI * 2);
+    }
+    ctx.moveTo(x + s * 0.2, y); ctx.ellipse(x + (puffs - 1) * s * 0.4, y + s * 0.1, (puffs - 1) * s * 0.5 + s * 0.4, s * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+function drawClouds(ctx, w, h, p, t, seed) { cloudShapes(ctx, w, h, p, seed, 5); }
+function cloudStrip(w, h, p, seed, dpr) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d"); x.filter = `blur(${Math.round(5 * dpr)}px)`;
+  cloudShapes(x, w, h, p, seed, Math.max(5, Math.round(w / (260 * dpr))));
+  return c;
+}
+function drawScene(canvas, { seed, mode, t }) {
+  const ctx = canvas.getContext("2d"); const w = canvas.width, h = canvas.height; const p = PAL[mode];
+  const G = geometry(w, h); const rand = rng(seed);
+  drawSky(ctx, w, h, p); drawClouds(ctx, w, h, p, t, seed); drawLand(ctx, w, h, p, rand); drawPole(ctx, w, h, p, G);
+  twigs(ctx, G, rng(seed + 1), false); drawStork(ctx, G, t, true); drawStork(ctx, G, t, false); twigs(ctx, G, rng(seed + 1), true);
+}
+/* Kiosk: statische Ebenen vorrechnen, je Bild nur Wolken und Kopf neu zeichnen. */
+let sceneSeed = 7, layers = null;
+const scene = $("#scene");
+function buildStatic() {
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
+  scene.width = w; scene.height = h;
+  const mk = () => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+  const sky = mk(), mid = mk(), front = mk();
+  const p = PAL.dusk, G = geometry(w, h), rand = rng(sceneSeed);
+  drawSky(sky.getContext("2d"), w, h, p);
+  const m = mid.getContext("2d"); drawLand(m, w, h, p, rand); drawPole(m, w, h, p, G); twigs(m, G, rng(sceneSeed + 1), false); drawStork(m, G, 0, true);
+  twigs(front.getContext("2d"), G, rng(sceneSeed + 1), true);
+  layers = { sky, mid, front, w, h, G, p, clouds: cloudStrip(w, h, p, sceneSeed, dpr) };
+}
+let lastFrame = 0;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function frame(ts) {
+  if (!layers) return;
+  if (ts - lastFrame > 60 || !lastFrame) {
+    lastFrame = ts;
+    const ctx = scene.getContext("2d"); const { w, h, G, p } = layers;
+    ctx.drawImage(layers.sky, 0, 0);
+    const off = reduceMotion ? 0 : (ts * 0.004) % w;
+    ctx.drawImage(layers.clouds, off, 0); ctx.drawImage(layers.clouds, off - w, 0);
+    ctx.drawImage(layers.mid, 0, 0); drawStork(ctx, G, reduceMotion ? 0 : ts, false); ctx.drawImage(layers.front, 0, 0);
+  }
+  if (!reduceMotion) requestAnimationFrame(frame);
+}
+
+/* ---------- Start ---------- */
+buildPanel();
+buildThemeGrid();
+buildLiveResults();
+buildPlaces();
+syncLiveNow();
+$("#pvMarkers").checked = markersOn;
+applyTheme();
+buildStatic();
+requestAnimationFrame(frame);
+applyScenario();
+wake();
+let resizeT = null;
+addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { buildStatic(); lastFrame = 0; if (reduceMotion) requestAnimationFrame(frame); renderAll(); }, 120); });
+setInterval(() => { renderClock(); renderMusic(); }, 1000);
+setInterval(() => { renderBoards(); placeMarkers(); }, 15000);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => renderAll());
+</script>
+
+</body>
+</html>

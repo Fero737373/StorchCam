@@ -1,0 +1,57 @@
+[project]
+name = "storchcam"
+dynamic = ["version"]
+description = "Live-Cam-Kiosk für den Raspberry Pi: Livestream, Uhr, Wetter, Abfahrten, Musik und Retro-Gaming"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-only" }
+authors = [{ name = "StorchCam Contributors" }]
+dependencies = [
+  "tzdata>=2024.1; platform_system == 'Windows'",
+  "ytmusicapi>=1.12",
+  "yt-dlp[default]>=2026.10.21",
+  "segno>=1.6",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.10",
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+
+[project.scripts]
+storchcam = "storchcam.kiosk_app:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "storchcam.version.__version__"}
+
+[tool.setuptools.package-data]
+storchcam = ["web/*.html", "web/*.css", "web/*.js", "web/fonts/*.woff2", "web/fonts/*.txt", "web/theme/*.svg", "web/vendor/*.js", "web/vendor/*.txt"]
+
+[tool.setuptools.packages.find]
+include = ["storchcam*"]
+exclude = ["tests*", "node_modules*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Einige Tests teilen Hilfsfunktionen aus tests/test_server.py; ohne Projektwurzel im Pfad bricht `pytest -q` beim Sammeln ab.
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+packages = ["storchcam"]
+warn_unused_ignores = true
+check_untyped_defs = true

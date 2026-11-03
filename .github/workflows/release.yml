@@ -1,0 +1,38 @@
+name: Release
+
+# Ein Tag wie v1.0.0 erzeugt die GitHub-Version mit ZIP-Download und den Notizen aus CHANGELOG.md.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: GitHub-Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Version prüfen
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          code="$(python3 -c 'import re,pathlib; print(re.search(r"__version__ = \"(.+?)\"", pathlib.Path("storchcam/version.py").read_text())[1])')"
+          if [ "$version" != "$code" ]; then
+            echo "Tag $GITHUB_REF_NAME passt nicht zu storchcam/version.py ($code)" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: ZIP und Notizen erstellen
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          git archive --format=zip --prefix="StorchCam-$version/" -o "StorchCam-$version.zip" "$GITHUB_REF_NAME"
+          awk -v v="$version" 'index($0, "## [" v "]") == 1 {found=1; next} found && /^## / {exit} found' CHANGELOG.md > notes.md
+          test -s notes.md || echo "StorchCam $version" > notes.md
+      - name: Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          gh release create "$GITHUB_REF_NAME" "StorchCam-$version.zip" --title "StorchCam $version" --notes-file notes.md --verify-tag

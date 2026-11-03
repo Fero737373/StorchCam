@@ -1,0 +1,27 @@
+# Nur pyproject.toml, README.md, LICENSE, storchcam/ und docker-entrypoint.py werden ins Image kopiert.
+.git
+.github
+.venv
+data
+docs
+tests
+node_modules
+test-results
+playwright-report
+**/__pycache__
+*.pyc
+*.egg-info
+build
+dist
+.env
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.gitignore
+.dockerignore
+config.example.json
+package.json
+package-lock.json
+playwright.config.js
+docker-compose.yml
+Dockerfile
